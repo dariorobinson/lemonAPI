@@ -50,22 +50,6 @@ public class User {
         this.username = username;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public List<Playlist> getUserPlaylists() {
         return userPlaylists;
     }
@@ -79,12 +63,12 @@ public class User {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return Objects.equals(id, user.id) && Objects.equals(username, user.username) && Objects.equals(password, user.password) && Objects.equals(email, user.email) && Objects.equals(userPlaylists, user.userPlaylists);
+        return Objects.equals(id, user.id) && Objects.equals(username, user.username) && Objects.equals(discriminator, user.discriminator) && Objects.equals(userPlaylists, user.userPlaylists);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, username, password, email, userPlaylists);
+        return Objects.hash(id, username, discriminator, userPlaylists);
     }
 
     @Override
@@ -92,8 +76,7 @@ public class User {
         return "User{" +
                 "id='" + id + '\'' +
                 ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", email='" + email + '\'' +
+                ", discriminator='" + discriminator + '\'' +
                 ", userPlaylists=" + userPlaylists +
                 '}';
     }
