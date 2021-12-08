@@ -1,16 +1,25 @@
 package com.revature.lemon.models;
 
+import javax.persistence.*;
 import javax.xml.datatype.Duration;
 
+@Entity
+@Table(name = "songs")
 public class song {
 
+    @Id
+    @Column(name = "song_url", nullable = false, unique = true)
     private String song_url;
-    private String name;
+
+    @Column(name = "name", nullable = false, columnDefinition = "VARCHAR CHECK (LENGTH(name) >= 1)")
+    private String songName;
+
+    @Column(name = "duration", nullable = false)
     private Duration duration;
 
     public song(String song_url, String name, Duration duration) {
         this.song_url = song_url;
-        this.name = name;
+        this.songName = name;
         this.duration = duration;
     }
 
@@ -27,12 +36,12 @@ public class song {
         this.song_url = song_url;
     }
 
-    public String getName() {
-        return name;
+    public String getSongName() {
+        return songName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setSongName(String songName) {
+        this.songName = songName;
     }
 
     public Duration getDuration() {
@@ -47,7 +56,7 @@ public class song {
     public String toString() {
         return "songs{" +
                 "song_url='" + song_url + '\'' +
-                ", name='" + name + '\'' +
+                ", name='" + songName + '\'' +
                 ", duration=" + duration +
                 '}';
     }

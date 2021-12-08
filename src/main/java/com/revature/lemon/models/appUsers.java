@@ -1,9 +1,23 @@
 package com.revature.lemon.models;
 
+
+import javax.persistence.*;
+
+@Entity
+@Table(name = "users")
 public class appUsers {
+
+    @Id
+    @Column(name = "user_id", nullable = false, unique = true)
     private String user_id;
+
+    @Column(name = "username", nullable = false, unique = true, columnDefinition = "VARCHAR CHECK (LENGTH(username) >= 4)")
     private String username;
+
+    @Column(name = "password", nullable = false, columnDefinition = "VARCHAR CHECK (LENGTH(password) >= 4)")
     private String password;
+
+    @Column(name = "email", nullable = false, unique = true, columnDefinition = "VARCHAR CHECK (email <> '')")
     private String email;
 
     public appUsers(String user_id, String username, String password, String email) {

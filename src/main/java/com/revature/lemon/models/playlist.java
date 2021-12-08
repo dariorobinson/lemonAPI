@@ -1,10 +1,22 @@
 package com.revature.lemon.models;
 
+import javax.persistence.*;
+
+@Entity
+@Table(name = "playlists")
 public class playlist {
 
+    @Id
+    @Column(name = "playlist_id", nullable = false, unique = true)
     private String playlist_id;
+
+    @Column(name = "name", nullable = false, columnDefinition = "VARCHAR CHECK (LENGTH(name) >= 1)")
     private String playlistName;
+
+    @Column(name = "description")
     private String description;
+
+    @Column(name = "access_type", nullable = false)
     private String access_type;
 
     public playlist(String playlist_id, String playlistName, String description, String access_type) {
