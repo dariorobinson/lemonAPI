@@ -50,7 +50,7 @@ public class Playlist {
     }
 
     public enum RoleType {
-        CREATOR, EDITOR, VIEWER, UNACCESSIBLE
+        CREATOR, EDITOR, VIEWER
     }
 
     public String getId() {

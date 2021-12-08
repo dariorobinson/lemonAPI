@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = {
+    @UniqueConstraint(name = "unique_user_discriminator", columnNames = {"username", "discriminator"})
+})
 public class User {
 
     @Id
@@ -18,10 +20,7 @@ public class User {
     private String username;
 
     @Column(nullable = false)
-    private String password;
-
-    @Column(nullable = false, unique = true)
-    private String email;
+    private String discriminator;
 
     @ManyToMany
     @JoinTable(
@@ -30,6 +29,10 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "playlist_id")
     )
     private List<Playlist> userPlaylists;
+
+    public User() {
+        super();
+    }
 
     public String getId() {
         return id;
