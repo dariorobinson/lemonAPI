@@ -1,0 +1,9 @@
+# IDE specific files
+.idea/
+
+# Compiled/Packaged files and directories
+target/
+
+# Configuration files
+*.properties
+*.yml
