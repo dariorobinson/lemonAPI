@@ -1,5 +1,5 @@
-drop table if exists users_playlists;
-drop table if exists songs_playlists;
+drop table if exists user_playlist_role;
+drop table if exists song_playlist_order;
 drop table if exists users;
 drop table if exists playlists;
 drop table if exists songs;
@@ -7,20 +7,23 @@ drop table if exists songs;
 drop type if exists role;
 drop type if exists access;
 
+create type access as enum ('PRIVATE', 'PUBLIC');
+
+--unsure if I want to keep this "role" enum since we're possibly allowing it to be null
+create type role as enum('CREATOR', 'EDITOR', 'VIEWER');
+
 create table users (
 	user_id varchar primary key,
-	username varchar unique not null,
-	password varchar not null,
-	email varchar unique not null
+	username varchar not null,
+	discriminator varchar not null,
+	unique (username, discriminator)
 );
-
-create type access as enum ('private', 'public');
 
 create table playlists (
 	playlist_id varchar primary key,
 	name varchar not null,
 	description varchar,
-	access access not null default 'private'
+	access_type access not null default 'PRIVATE'
 );
 
 create table songs (
@@ -29,20 +32,20 @@ create table songs (
 	duration time
 );
 
-create type role as enum('creator', 'editor', 'viewer', 'unaccessible');
-
-create table users_playlists (
+create table user_playlist_role (
 	user_id varchar,
 	playlist_id varchar,
-	role_type role default 'unaccessible',
-	constraint fk_user foreign key(user_id) references users(user_id),
-	constraint fk_playlist foreign key(playlist_id) references playlists(playlist_id)
+	role_type varchar not null,
+	primary key(user_id, playlist_id)
 );
 
-create table songs_playlists (
+create table song_playlist_order (
 	song_url varchar,
 	playlist_id varchar,
 	song_order int not null,
-	constraint fk_song foreign key(song_url) references songs(song_url),
-	constraint fk_playlist foreign key(playlist_id) references playlists(playlist_id)
+	primary key(song_url, playlist_id)
 );
+
+select * from users;
+select * from user_playlist_role;
+select * from playlists;
