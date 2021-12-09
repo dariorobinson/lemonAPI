@@ -14,6 +14,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.channel.VoiceChannel;
 import discord4j.voice.AudioProvider;
 import discord4j.voice.VoiceConnection;
 import reactor.core.publisher.Flux;
@@ -56,6 +57,7 @@ public class botDriver {
         AudioProvider provider = new LavaPlayerAudioProvider(player);
 
 
+        // TODO: Setup the bot to run on individual threads for each server it's connected to.
 
         // JOIN
         // Constructs command to get the bot in a voice channel
@@ -75,14 +77,12 @@ public class botDriver {
                 .doOnNext(command -> playerManager.loadItem(command.get(1), scheduler))
                 .then());
 
-        // Leave
+        // LEAVE
         // Constructs a command to get the bot to leave the channel
         commands.put("leave", event -> Mono.justOrEmpty(event.getMember())
-                .flatMap(Member::getVoiceState)
+                .flatMap(Member::getVoiceState) // Gets the current voice state of the member who calls the command
                 .flatMap(VoiceState::getChannel)
-                // join returns a VoiceConnection which would be required if we were
-                // adding disconnection features, but for now we are just ignoring it.
-                .flatMap(channel -> channel.join(spec -> spec.setProvider(provider)))
+                .flatMap(VoiceChannel::sendDisconnectVoiceState) // Uses that voice channel to then disconnect the bot.
                 .then());
 
         // Creates our connection and stops the code from running until the bot is logged in.
