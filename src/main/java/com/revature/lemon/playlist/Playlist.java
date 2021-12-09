@@ -1,7 +1,8 @@
 package com.revature.lemon.playlist;
 
-import com.revature.lemon.song.Song;
-import com.revature.lemon.user.User;
+import com.revature.lemon.common.model.UserPlaylistRole;
+import com.revature.lemon.common.model.SongPlaylistOrder;
+import com.revature.lemon.common.util.AccessType;
 
 import javax.persistence.*;
 import java.util.List;
@@ -22,36 +23,14 @@ public class Playlist {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "VARCHAR DEFAULT 'PRIVATE'")
+    @Column(nullable = false, columnDefinition = "access DEFAULT 'PRIVATE' CHECK (access in ('PRIVATE', 'PUBLIC'))")
     private AccessType access;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role_type", nullable = false, columnDefinition = "VARCHAR DEFAULT 'UNACCESSIBLE'")
-    private RoleType userRole;
+    @OneToMany(mappedBy = "playlist")
+    private List<UserPlaylistRole> playlistRole;
 
-    @ManyToMany
-    @JoinTable(
-            name = "users_playlists",
-            joinColumns =@JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "playlist_id")
-    )
-    private List<User> userPlaylists;
-
-    @ManyToMany
-    @JoinTable(
-            name = "songs_playlists",
-            joinColumns = @JoinColumn(name = "playlist_id"),
-            inverseJoinColumns = @JoinColumn(name = "song_id")
-    )
-    private List<Song> songPlaylists;
-
-    public enum AccessType {
-        PRIVATE, PUBLIC
-    }
-
-    public enum RoleType {
-        CREATOR, EDITOR, VIEWER
-    }
+    @OneToMany(mappedBy = "playlist")
+    private List<SongPlaylistOrder> songOrder;
 
     public String getId() {
         return id;
@@ -85,28 +64,20 @@ public class Playlist {
         this.access = access;
     }
 
-    public RoleType getUserRole() {
-        return userRole;
+    public List<UserPlaylistRole> getPlaylistRole() {
+        return playlistRole;
     }
 
-    public void setUserRole(RoleType userRole) {
-        this.userRole = userRole;
+    public void setPlaylistRole(List<UserPlaylistRole> playlistRole) {
+        this.playlistRole = playlistRole;
     }
 
-    public List<User> getUserPlaylists() {
-        return userPlaylists;
+    public List<SongPlaylistOrder> getSongOrder() {
+        return songOrder;
     }
 
-    public void setUserPlaylists(List<User> userPlaylists) {
-        this.userPlaylists = userPlaylists;
-    }
-
-    public List<Song> getSongPlaylists() {
-        return songPlaylists;
-    }
-
-    public void setSongPlaylists(List<Song> songPlaylists) {
-        this.songPlaylists = songPlaylists;
+    public void setSongOrder(List<SongPlaylistOrder> songOrder) {
+        this.songOrder = songOrder;
     }
 
     @Override
@@ -114,12 +85,12 @@ public class Playlist {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Playlist playlist = (Playlist) o;
-        return Objects.equals(id, playlist.id) && Objects.equals(name, playlist.name) && Objects.equals(description, playlist.description) && access == playlist.access && userRole == playlist.userRole && Objects.equals(userPlaylists, playlist.userPlaylists) && Objects.equals(songPlaylists, playlist.songPlaylists);
+        return Objects.equals(id, playlist.id) && Objects.equals(name, playlist.name) && Objects.equals(description, playlist.description) && access == playlist.access && Objects.equals(playlistRole, playlist.playlistRole) && Objects.equals(songOrder, playlist.songOrder);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, description, access, userRole, userPlaylists, songPlaylists);
+        return Objects.hash(id, name, description, access, playlistRole, songOrder);
     }
 
     @Override
@@ -129,8 +100,8 @@ public class Playlist {
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", access=" + access +
-                ", userRole=" + userRole +
-                ", songPlaylists=" + songPlaylists +
+                ", playlistRole=" + playlistRole +
+                ", songOrder=" + songOrder +
                 '}';
     }
 }

@@ -1,6 +1,6 @@
 package com.revature.lemon.user;
 
-import com.revature.lemon.playlist.Playlist;
+import com.revature.lemon.common.model.UserPlaylistRole;
 
 import javax.persistence.*;
 import java.util.List;
@@ -16,19 +16,14 @@ public class User {
     @Column(name = "user_id")
     private String id;
 
-    @Column(nullable = false, unique = true, columnDefinition = "VARCHAR CHECK (username <> '')")
+    @Column(nullable = false, columnDefinition = "VARCHAR CHECK (username <> '')")
     private String username;
 
     @Column(nullable = false)
     private String discriminator;
 
-    @ManyToMany
-    @JoinTable(
-        name = "users_playlists",
-            joinColumns =@JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "playlist_id")
-    )
-    private List<Playlist> userPlaylists;
+    @OneToMany(mappedBy = "user")
+    private List<UserPlaylistRole> playlistRole;
 
     public User() {
         super();
@@ -50,12 +45,20 @@ public class User {
         this.username = username;
     }
 
-    public List<Playlist> getUserPlaylists() {
-        return userPlaylists;
+    public String getDiscriminator() {
+        return discriminator;
     }
 
-    public void setUserPlaylists(List<Playlist> userPlaylists) {
-        this.userPlaylists = userPlaylists;
+    public void setDiscriminator(String discriminator) {
+        this.discriminator = discriminator;
+    }
+
+    public List<UserPlaylistRole> getPlaylistRole() {
+        return playlistRole;
+    }
+
+    public void setPlaylistRole(List<UserPlaylistRole> playlistRole) {
+        this.playlistRole = playlistRole;
     }
 
     @Override
@@ -63,21 +66,13 @@ public class User {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return Objects.equals(id, user.id) && Objects.equals(username, user.username) && Objects.equals(discriminator, user.discriminator) && Objects.equals(userPlaylists, user.userPlaylists);
+        return Objects.equals(id, user.id) && Objects.equals(username, user.username) && Objects.equals(discriminator, user.discriminator) && Objects.equals(playlistRole, user.playlistRole);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, username, discriminator, userPlaylists);
+        return Objects.hash(id, username, discriminator, playlistRole);
     }
 
-    @Override
-    public String toString() {
-        return "User{" +
-                "id='" + id + '\'' +
-                ", username='" + username + '\'' +
-                ", discriminator='" + discriminator + '\'' +
-                ", userPlaylists=" + userPlaylists +
-                '}';
-    }
+
 }
