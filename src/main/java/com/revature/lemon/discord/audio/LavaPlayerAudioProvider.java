@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 public final class LavaPlayerAudioProvider extends AudioProvider {
 
     private final AudioPlayer player;
-    private final MutableAudioFrame frame = new MutableAudioFrame();
+    private final MutableAudioFrame frame;
 
     public LavaPlayerAudioProvider(final AudioPlayer player) {
         // Allocate a ByteBuffer for Discord4J's AudioProvider to hold audio data
@@ -23,6 +23,7 @@ public final class LavaPlayerAudioProvider extends AudioProvider {
         );
         // Set LavaPlayer's MutableAudioFrame to use the same buffer as the one we
         // just allocated
+        frame = new MutableAudioFrame();
         frame.setBuffer(getBuffer());
         this.player = player;
     }
