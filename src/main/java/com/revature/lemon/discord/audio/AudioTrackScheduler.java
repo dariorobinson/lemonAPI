@@ -74,4 +74,8 @@ public final class AudioTrackScheduler extends AudioEventAdapter implements Audi
     public void loadFailed(FriendlyException e) {
 
     }
+
+    public void clear() {
+        queue.clear();
+    }
 }

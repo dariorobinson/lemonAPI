@@ -78,7 +78,25 @@ public class botDriver {
         commands.put("leave", event -> Mono.justOrEmpty(event.getMember())
                 .flatMap(Member::getVoiceState) // Gets the current voice state of the member who calls the command
                 .flatMap(VoiceState::getChannel)
-                .flatMap(VoiceChannel::sendDisconnectVoiceState) // Uses that voice channel to then disconnect the bot.
+                .flatMap(channel -> {
+                    Snowflake snowflake = channel.getGuildId();
+                    GuildAudioManager audioManager = GuildAudioManager.of(snowflake);
+                    audioManager.getScheduler().clear();
+                    audioManager.getPlayer().destroy();
+                    return channel.sendDisconnectVoiceState();
+                }) // Uses that voice channel to then disconnect the bot.
+                .then());
+
+        commands.put("skip", event -> Mono.justOrEmpty(event.getMember())
+                .flatMap(Member::getVoiceState)
+                .flatMap(VoiceState::getChannel)
+                .doOnNext(channel -> {
+                    Snowflake snowflake = channel.getGuildId();
+                    GuildAudioManager audioManager = GuildAudioManager.of(snowflake);
+                    if(!audioManager.getScheduler().skip()) {
+                        audioManager.getPlayer().destroy();
+                    }
+                })
                 .then());
 
         // Creates our connection and stops the code from running until the bot is logged in.
