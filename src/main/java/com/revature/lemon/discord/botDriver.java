@@ -55,8 +55,7 @@ public class botDriver {
         commands.put("join", event -> Mono.justOrEmpty(event.getMember())
                 .flatMap(Member::getVoiceState)
                 .flatMap(VoiceState::getChannel)
-                // join returns a VoiceConnection which would be required if we were
-                // adding disconnection features, but for now we are just ignoring it.
+                // Go down to the channel level so we can perform the join command with a created audio provider.
                 .flatMap(channel -> channel.join(spec -> spec.setProvider(GuildAudioManager.of(channel.getGuildId()).getProvider())))
                 .then());
 
@@ -64,17 +63,24 @@ public class botDriver {
         // Constructs a command to play a given song
 
         commands.put("play", event -> Mono.justOrEmpty(event.getMessage())
-               // .map(content -> Arrays.asList(content.getContent().split(" ")))
                 .doOnNext(command -> {
                     try {
+                        // Get the url from the second line provided in the command
                         String audioUrl = command.getContent().split(" ")[1];
+
+                        // Get the guild ID for targeting
                         Snowflake snowflake =  command.getGuildId().orElseThrow(RuntimeException::new);
+
+                        // Audio manager for scheduler manipulation
                         GuildAudioManager audioManager = GuildAudioManager.of(snowflake);
+
+                        // Grab the scheduler and then load it with the given URL
                         AudioTrackScheduler scheduler = audioManager.getScheduler();
                         PLAYER_MANAGER.loadItem(audioUrl, scheduler);
                     } catch (Exception E) {
+                        // If that doesn't work then we tell the user they put it in wrong
                         command.getChannel().flatMap(message ->
-                                message.createMessage("Invalid input! Give a youtube, soundcloud, or bandcamp url!"))
+                                message.createMessage("Invalid input! Give a valid youtube, soundcloud, or bandcamp url!"))
                                 .subscribe();
                     }
 
@@ -87,12 +93,16 @@ public class botDriver {
                 .flatMap(Member::getVoiceState) // Gets the current voice state of the member who calls the command
                 .flatMap(VoiceState::getChannel)
                 .flatMap(channel -> {
+                    // Get the guild Id we can point to
                     Snowflake snowflake = channel.getGuildId();
+                    // Get the GuildAudioManager so we can clear
                     GuildAudioManager audioManager = GuildAudioManager.of(snowflake);
+                    // Clear the schedule, then destroy the player
                     audioManager.getScheduler().clear();
                     audioManager.getPlayer().destroy();
+                    // Perform the disconnect.
                     return channel.sendDisconnectVoiceState();
-                }) // Uses that voice channel to then disconnect the bot.
+                })
                 .then());
 
         // SKIP
@@ -101,9 +111,16 @@ public class botDriver {
         commands.put("skip", event -> Mono.justOrEmpty(event.getMember())
                 .flatMap(Member::getVoiceState)
                 .flatMap(VoiceState::getChannel)
+                // Navigate to the user's current voice channel
                 .doOnNext(channel -> {
+                    // Get the guild ID for manipulation
                     Snowflake snowflake = channel.getGuildId();
+
+                    // Grab the audio manager from the guild ID
                     GuildAudioManager audioManager = GuildAudioManager.of(snowflake);
+
+                    // Perform a skip which returns a boolean value.
+                    // If that value is false, then we need to destroy the player because we're out of songs.
                     if(!audioManager.getScheduler().skip()) {
                         audioManager.getPlayer().destroy();
                     }
@@ -129,7 +146,7 @@ public class botDriver {
                                     currTrackInfo.uri
                                 );
                             })
-                            .subscribe();
+                            .subscribe(); // Necessary for nested streams.
                         }
 
                 )
