@@ -66,11 +66,18 @@ public class botDriver {
         commands.put("play", event -> Mono.justOrEmpty(event.getMessage())
                // .map(content -> Arrays.asList(content.getContent().split(" ")))
                 .doOnNext(command -> {
-                    String audioUrl = command.getContent().split(" ")[1];
-                    Snowflake snowflake =  command.getGuildId().orElseThrow(RuntimeException::new);
-                    GuildAudioManager audioManager = GuildAudioManager.of(snowflake);
-                    AudioTrackScheduler scheduler = audioManager.getScheduler();
-                    PLAYER_MANAGER.loadItem(audioUrl, scheduler);
+                    try {
+                        String audioUrl = command.getContent().split(" ")[1];
+                        Snowflake snowflake =  command.getGuildId().orElseThrow(RuntimeException::new);
+                        GuildAudioManager audioManager = GuildAudioManager.of(snowflake);
+                        AudioTrackScheduler scheduler = audioManager.getScheduler();
+                        PLAYER_MANAGER.loadItem(audioUrl, scheduler);
+                    } catch (Exception E) {
+                        command.getChannel().flatMap(message ->
+                                message.createMessage("Invalid input! Give a youtube, soundcloud, or bandcamp url!"))
+                                .subscribe();
+                    }
+
                 })
                 .then());
 
@@ -118,7 +125,8 @@ public class botDriver {
                                 return message.createMessage(
                                     "Now playing: " +
                                     currTrackInfo.title + "\nBy: " +
-                                    currTrackInfo.author
+                                    currTrackInfo.author + "\nAt: " +
+                                    currTrackInfo.uri
                                 );
                             })
                             .subscribe();
