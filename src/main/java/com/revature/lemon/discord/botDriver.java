@@ -1,28 +1,24 @@
 package com.revature.lemon.discord;
 
-import com.revature.lemon.discord.audio.TrackScheduler;
+import com.revature.lemon.discord.audio.AudioTrackScheduler;
+import com.revature.lemon.discord.audio.GuildAudioManager;
 import com.revature.lemon.discord.commands.Command;
-import com.revature.lemon.discord.audio.LavaPlayerAudioProvider;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
+import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer;
+import discord4j.common.util.Snowflake;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.VoiceState;
-import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.channel.VoiceChannel;
-import discord4j.voice.AudioProvider;
-import discord4j.voice.VoiceConnection;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class botDriver {
     private static final Map<String , Command> commands = new HashMap<>();
@@ -32,8 +28,17 @@ public class botDriver {
         commands.put("ping", event -> event.getMessage().getChannel()
                 .flatMap(channel -> channel.createMessage("Pong!"))
                 .then());
+    }
 
+    public static final AudioPlayerManager PLAYER_MANAGER;
 
+    static {
+        PLAYER_MANAGER = new DefaultAudioPlayerManager();
+        // This is an optimization strategy that Discord4J can utilize to minimize allocations
+        PLAYER_MANAGER.getConfiguration().setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
+        // Allow playerManager to parse remote sources like YouTube links
+        AudioSourceManagers.registerRemoteSources(PLAYER_MANAGER);
+        AudioSourceManagers.registerLocalSource(PLAYER_MANAGER);
     }
 
     public static void main(String[] args) {
@@ -41,23 +46,8 @@ public class botDriver {
         // Make sure the bot token is set in the arguments for this file!
         String bToken = new String(args[0]);
 
-        // Creates an instance of AudioPlayer and translates URLs to AudioTrack isntances we can use
-        final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
-
-        // Optimization strategy for Discord4J
-        playerManager.getConfiguration().setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
-
-        // Allow playerManager to parse remote sources like YouTube links
-        AudioSourceManagers.registerRemoteSources(playerManager);
-
-        // Create an AudioPlayer so Discord4J can receive audio data
-        final AudioPlayer player = playerManager.createPlayer();
-
-        // Initialize our provider
-        AudioProvider provider = new LavaPlayerAudioProvider(player);
-
-
         // TODO: Setup the bot to run on individual threads for each server it's connected to.
+        //BOT JOINS -> CREATE PLAYER -> CREATE PROVIDER -> ASSIGN PROVIDER TO THAT CHANNEL
 
         // JOIN
         // Constructs command to get the bot in a voice channel
@@ -66,15 +56,21 @@ public class botDriver {
                 .flatMap(VoiceState::getChannel)
                 // join returns a VoiceConnection which would be required if we were
                 // adding disconnection features, but for now we are just ignoring it.
-                .flatMap(channel -> channel.join(spec -> spec.setProvider(provider)))
+                .flatMap(channel -> channel.join(spec -> spec.setProvider(GuildAudioManager.of(channel.getGuildId()).getProvider())))
                 .then());
 
         // PLAY
         // Constructs a command to play a given song
-        final TrackScheduler scheduler = new TrackScheduler(player);
-        commands.put("play", event -> Mono.justOrEmpty(event.getMessage().getContent())
-                .map(content -> Arrays.asList(content.split(" ")))
-                .doOnNext(command -> playerManager.loadItem(command.get(1), scheduler))
+
+        commands.put("play", event -> Mono.justOrEmpty(event.getMessage())
+               // .map(content -> Arrays.asList(content.getContent().split(" ")))
+                .doOnNext(command -> {
+                    String audioUrl = command.getContent().split(" ")[1];
+                    Snowflake snowflake =  command.getGuildId().orElseThrow(RuntimeException::new);
+                    GuildAudioManager audioManager = GuildAudioManager.of(snowflake);
+                    AudioTrackScheduler scheduler = audioManager.getScheduler();
+                    PLAYER_MANAGER.loadItem(audioUrl, scheduler);
+                })
                 .then());
 
         // LEAVE
@@ -82,7 +78,25 @@ public class botDriver {
         commands.put("leave", event -> Mono.justOrEmpty(event.getMember())
                 .flatMap(Member::getVoiceState) // Gets the current voice state of the member who calls the command
                 .flatMap(VoiceState::getChannel)
-                .flatMap(VoiceChannel::sendDisconnectVoiceState) // Uses that voice channel to then disconnect the bot.
+                .flatMap(channel -> {
+                    Snowflake snowflake = channel.getGuildId();
+                    GuildAudioManager audioManager = GuildAudioManager.of(snowflake);
+                    audioManager.getScheduler().clear();
+                    audioManager.getPlayer().destroy();
+                    return channel.sendDisconnectVoiceState();
+                }) // Uses that voice channel to then disconnect the bot.
+                .then());
+
+        commands.put("skip", event -> Mono.justOrEmpty(event.getMember())
+                .flatMap(Member::getVoiceState)
+                .flatMap(VoiceState::getChannel)
+                .doOnNext(channel -> {
+                    Snowflake snowflake = channel.getGuildId();
+                    GuildAudioManager audioManager = GuildAudioManager.of(snowflake);
+                    if(!audioManager.getScheduler().skip()) {
+                        audioManager.getPlayer().destroy();
+                    }
+                })
                 .then());
 
         // Creates our connection and stops the code from running until the bot is logged in.
