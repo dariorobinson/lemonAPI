@@ -25,8 +25,11 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<UserPlaylistRole> playlistRole;
 
-    public User() {
-        super();
+    public User() {super();}
+    public User(String id, String username, String discriminator){
+        this.id=id;
+        this.username=username;
+        this.discriminator=discriminator;
     }
 
     public String getId() {
