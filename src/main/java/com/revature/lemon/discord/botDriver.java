@@ -7,6 +7,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer;
 import discord4j.common.util.Snowflake;
 import discord4j.core.DiscordClientBuilder;
@@ -14,6 +15,7 @@ import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.channel.MessageChannel;
 import discord4j.core.object.entity.channel.VoiceChannel;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -46,7 +48,6 @@ public class botDriver {
         // Make sure the bot token is set in the arguments for this file!
         String bToken = new String(args[0]);
 
-        // TODO: Setup the bot to run on individual threads for each server it's connected to.
         //BOT JOINS -> CREATE PLAYER -> CREATE PROVIDER -> ASSIGN PROVIDER TO THAT CHANNEL
 
         // JOIN
@@ -87,6 +88,9 @@ public class botDriver {
                 }) // Uses that voice channel to then disconnect the bot.
                 .then());
 
+        // SKIP
+        // Skips the currently playing song and moves on to the next.
+        // If there is no next song, stops playing altogether.
         commands.put("skip", event -> Mono.justOrEmpty(event.getMember())
                 .flatMap(Member::getVoiceState)
                 .flatMap(VoiceState::getChannel)
@@ -97,6 +101,30 @@ public class botDriver {
                         audioManager.getPlayer().destroy();
                     }
                 })
+                .then());
+
+        // NOW PLAYING
+        // Spits out the currently playing song in discord
+        commands.put("np", event ->Mono.justOrEmpty(event.getMessage())
+                .doOnNext(channel -> {
+                        // Get the guild ID
+                        Snowflake guildID = channel.getGuildId().orElseThrow(RuntimeException::new);
+                        // Setup the message to be made;
+                        System.out.println("Inside message!");
+                        // Send the message
+                        channel.getChannel().flatMap(message -> {
+                                System.out.println("Inside Channel!");
+                                AudioTrackInfo currTrackInfo = GuildAudioManager.of(guildID).getPlayer().getPlayingTrack().getInfo();
+                                return message.createMessage(
+                                    "Now playing: " +
+                                    currTrackInfo.title + "\nBy: " +
+                                    currTrackInfo.author
+                                );
+                            })
+                            .subscribe();
+                        }
+
+                )
                 .then());
 
         // Creates our connection and stops the code from running until the bot is logged in.
