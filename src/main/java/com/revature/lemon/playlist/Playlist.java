@@ -22,9 +22,8 @@ public class Playlist {
     @Column()
     private String description;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "access DEFAULT 'PRIVATE' CHECK (access in ('PRIVATE', 'PUBLIC'))")
-    private AccessType access;
+    @Column(nullable = false, columnDefinition = "varchar DEFAULT 'PRIVATE' CHECK (access in ('PRIVATE', 'PUBLIC'))")
+    private String access;
 
     @OneToMany(mappedBy = "playlist")
     private List<UserPlaylistRole> playlistRole;
@@ -56,11 +55,11 @@ public class Playlist {
         this.description = description;
     }
 
-    public AccessType getAccess() {
+    public String getAccess() {
         return access;
     }
 
-    public void setAccess(AccessType access) {
+    public void setAccess(String access) {
         this.access = access;
     }
 
