@@ -1,10 +1,11 @@
 package com.revature.lemon.playlist;
 
-import com.revature.lemon.common.model.UserPlaylistRole;
+import com.revature.lemon.userplaylist.UserPlaylistRole;
 import com.revature.lemon.common.model.SongPlaylistOrder;
-import com.revature.lemon.common.util.AccessType;
+import com.revature.lemon.user.User;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -25,11 +26,16 @@ public class Playlist {
     @Column(nullable = false, columnDefinition = "varchar DEFAULT 'PRIVATE' CHECK (access in ('PRIVATE', 'PUBLIC'))")
     private String access;
 
-    @OneToMany(mappedBy = "playlist")
+    //CascadeType is used to let hibernate know that it needs to persist/remove/merge etc. cascaded tables when playlist table gets updated
+    @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL)
     private List<UserPlaylistRole> playlistRole;
 
     @OneToMany(mappedBy = "playlist")
     private List<SongPlaylistOrder> songOrder;
+
+    public Playlist() {
+        super();
+    }
 
     public String getId() {
         return id;
@@ -63,7 +69,7 @@ public class Playlist {
         this.access = access;
     }
 
-    public List<UserPlaylistRole> getPlaylistRole() {
+    public List<UserPlaylistRole> getPlayListRole() {
         return playlistRole;
     }
 
@@ -77,6 +83,19 @@ public class Playlist {
 
     public void setSongOrder(List<SongPlaylistOrder> songOrder) {
         this.songOrder = songOrder;
+    }
+
+    /**
+     * Used to create UserPlaylistRole with given session user and currently selected playlist.
+     * Assigns the "CREATOR" role and creates a row for Playlist in PlaylistRole
+     * @param user current session user
+     */
+    public void addCreator(User user) {
+        UserPlaylistRole newUser = new UserPlaylistRole(user, this);
+        List<UserPlaylistRole> newPlaylistRole = new ArrayList<>();
+        setPlaylistRole(newPlaylistRole);
+        newUser.setUserRole("CREATOR");
+        playlistRole.add(newUser);
     }
 
     @Override

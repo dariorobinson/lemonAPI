@@ -1,4 +1,4 @@
-package com.revature.lemon.common.model;
+package com.revature.lemon.userplaylist;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
@@ -13,6 +13,15 @@ public class UserPlaylistRoleKey implements Serializable {
 
     @Column(name = "playlist_id")
     private String playlistId;
+
+    private UserPlaylistRoleKey() {
+
+    }
+
+    public UserPlaylistRoleKey(String userId, String playlistId) {
+        this.userId = userId;
+        this.playlistId = playlistId;
+    }
 
     public String getUserId() {
         return userId;

@@ -17,8 +17,8 @@ public class UserService {
     public User login(LoginRequest loginRequest){
 //        System.out.println(loginRequest.toString());
         //check if user exists, return null for yes
-        if (userRepository.findUserById(loginRequest.getId())!=null){
-            return null;
+        if (userRepository.findUserById(loginRequest.getId()).isPresent()){
+            return userRepository.findUserById(loginRequest.getId()).orElseThrow(RuntimeException::new);
         }
         else {//if the database doesn't have this user, save the new user info
             User newUser = new User(loginRequest.getId(),

@@ -21,6 +21,7 @@ public class Song {
     @Column(nullable = false)
     private Duration duration;
 
+    //will probably need a cascade attribute like playlists
     @OneToMany(mappedBy = "song")
     List<SongPlaylistOrder> songOrder;
 

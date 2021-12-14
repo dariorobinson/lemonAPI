@@ -1,6 +1,6 @@
 package com.revature.lemon.user;
 
-import com.revature.lemon.common.model.UserPlaylistRole;
+import com.revature.lemon.userplaylist.UserPlaylistRole;
 
 import javax.persistence.*;
 import java.util.List;
@@ -77,5 +77,12 @@ public class User {
         return Objects.hash(id, username, discriminator, playlistRole);
     }
 
-
+    @Override
+    public String toString() {
+        return "User{" +
+                "id='" + id + '\'' +
+                ", username='" + username + '\'' +
+                ", discriminator='" + discriminator + '\'' +
+                '}';
+    }
 }

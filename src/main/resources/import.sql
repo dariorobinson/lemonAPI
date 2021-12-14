@@ -1,0 +1,1 @@
+INSERT INTO users (user_id, username, discriminator) VALUES ('123', 'tester', '#3214');
