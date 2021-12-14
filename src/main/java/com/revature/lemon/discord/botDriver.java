@@ -14,7 +14,6 @@ import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.Member;
-import org.hibernate.id.GUIDGenerator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
