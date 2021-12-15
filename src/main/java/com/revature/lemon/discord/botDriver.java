@@ -1,12 +1,17 @@
 package com.revature.lemon.discord;
 
-import com.revature.lemon.discord.audio.AudioTrackScheduler;
+
 import com.revature.lemon.discord.audio.GuildAudioManager;
+import com.revature.lemon.discord.audio.TrackScheduler;
 import com.revature.lemon.discord.commands.Command;
+import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
+import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer;
 import discord4j.common.util.Snowflake;
 import discord4j.core.DiscordClientBuilder;
@@ -19,18 +24,39 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class botDriver {
-    private static final Map<String , Command> commands = new HashMap<>();
-
-
-    static {
-        commands.put("ping", event -> event.getMessage().getChannel()
-                .flatMap(channel -> channel.createMessage("Pong!"))
-                .then());
+    // ##################### FUNCTIONS ########################
+    // Boolean statement to learn if somethingi s aurl or not
+    private static boolean isUrl(String url) {
+        try {
+            new URI(url);
+            return true;
+        } catch (URISyntaxException e) {
+            return false;
+        }
     }
 
+    // Formatting for any timestamps we need
+    private static String formatTime(long timeInMillis) {
+        final long hours = timeInMillis / TimeUnit.HOURS.toMillis(1);
+        final long minutes = timeInMillis / TimeUnit.MINUTES.toMillis(1);
+        final long seconds = timeInMillis % TimeUnit.MINUTES.toMillis(1) / TimeUnit.SECONDS.toMillis(1);
+
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
+
+
+
+    // #################### VARIABLES ########################
+    // Create our global player manager to keep track of our audio players
     public static final AudioPlayerManager PLAYER_MANAGER;
+    // Map for our commands
+    private static final Map<String , Command> commands = new HashMap<>();
 
     static {
         PLAYER_MANAGER = new DefaultAudioPlayerManager();
@@ -41,13 +67,17 @@ public class botDriver {
         AudioSourceManagers.registerLocalSource(PLAYER_MANAGER);
     }
 
+
+    // ################## MAIN #########################
     public static void main(String[] args) {
+        // ################# VARIABLES #######################
         // Write down our bot token so we can create a session.
         // Make sure the bot token is set in the arguments for this file!
         String bToken = new String(args[0]);
 
-        //BOT JOINS -> CREATE PLAYER -> CREATE PROVIDER -> ASSIGN PROVIDER TO THAT CHANNEL
 
+
+        // ################### COMMANDS #########################
         // JOIN
         // Constructs command to get the bot in a voice channel
         commands.put("join", event -> Mono.justOrEmpty(event.getMessage())
@@ -61,8 +91,8 @@ public class botDriver {
                             // Send the message that we're connectiong
                             message.getChannel().flatMap(textChannel -> {
                                 return textChannel.createMessage(
-                                        "Connecting at " +
-                                        channel.getName()
+                                        "Connecting at `" +
+                                        channel.getName() + "`!"
                                 );
                             })
                             .subscribe();
@@ -74,15 +104,6 @@ public class botDriver {
                     })
                 .then());
 
-        /*
-        commands.put("join", event -> Mono.justOrEmpty(event.getMember())
-                .flatMap(Member::getVoiceState)
-                .flatMap(VoiceState::getChannel)
-                // Go down to the channel level so we can perform the join command with a created audio provider.
-                .flatMap(channel -> channel.join(spec -> spec.setProvider(GuildAudioManager.of(channel.getGuildId()).getProvider())))
-                .then());
-
-         */
 
         // PLAY
         // Constructs a command to play a given song
@@ -90,7 +111,7 @@ public class botDriver {
                 .doOnNext(command -> {
                     try {
                         // Get the url from the second line provided in the command
-                        String audioUrl = command.getContent().split(" ")[1];
+                        String audioUrl = command.getContent().substring(command.getContent().indexOf(" ") + 1);
 
                         // Get the guild ID for targeting
                         Snowflake snowflake =  command.getGuildId().orElseThrow(RuntimeException::new);
@@ -98,22 +119,67 @@ public class botDriver {
                         // Audio manager for scheduler manipulation
                         GuildAudioManager audioManager = GuildAudioManager.of(snowflake);
 
+                        // Check that our URL is a URL afterall, and if not we search for it
+                        if (!isUrl(audioUrl)) {
+                            audioUrl = "ytsearch:" + audioUrl;
+                        }
+
                         // Grab the scheduler and then load it with the given URL
-                        AudioTrackScheduler scheduler = audioManager.getScheduler();
-                        PLAYER_MANAGER.loadItem(audioUrl, scheduler);
+                        TrackScheduler scheduler = audioManager.getScheduler();
 
-                        // TODO: Fix the issue where only the second item in the queue existing triggers the print
+                        // Create a new load requeuest using a new handler that overrides the usual so we can access
+                        // both the channel and the track for parsing.
+                        PLAYER_MANAGER.loadItemOrdered(audioManager, audioUrl, new AudioLoadResultHandler() {
+                            @Override
+                            public void trackLoaded(AudioTrack track) {
+                                scheduler.queue(track);
 
-                        // If it works, then tell them it's playing
-                        command.getChannel().flatMap(message -> {
-                             return message.createMessage(
-                                     command.getUserData().username() +
-                                             " added " +
-                                             scheduler.getQueue().get(scheduler.getQueue().size() - 1).getInfo().title +
-                                             " to the queue"
-                             );
-                        })
-                        .subscribe();
+                                command.getChannel().flatMap(channel -> {
+                                    String message = command.getUserData().username() +
+                                            " added `" +
+                                            track.getInfo().title +
+                                            "` by `" +
+                                            track.getInfo().author +
+                                            "` to the queue!";
+                                    return channel.createMessage(message);
+                                }).subscribe();
+                            }
+                            // Override for playlists
+                            @Override
+                            public void playlistLoaded(AudioPlaylist playlist) {
+                                if (playlist.isSearchResult()){
+                                    trackLoaded(playlist.getTracks().get(0));
+                                }
+                                else {
+                                    final List<AudioTrack> tracks = playlist.getTracks();
+
+                                    command.getChannel().flatMap(channel -> {
+                                        String message = command.getUserData().username() +
+                                                " added `" +
+                                                String.valueOf(tracks.size()) +
+                                                "` tracks from the playlist `" +
+                                                playlist.getName() +
+                                                "` to the queue!";
+                                        return channel.createMessage(message);
+                                    }).subscribe();
+
+                                    for (final AudioTrack track : tracks) {
+                                        audioManager.getScheduler().queue(track);
+                                    }
+                                }
+
+                            }
+
+                            @Override
+                            public void noMatches() {
+                                //
+                            }
+
+                            @Override
+                            public void loadFailed(FriendlyException exception) {
+                                //
+                            }
+                        });
                     } catch (Exception E) {
                         // If that doesn't work then we tell the user they put it in wrong
                         command.getChannel().flatMap(message ->
@@ -173,15 +239,15 @@ public class botDriver {
                                 // Tell them the skip is happening
                                 message.getChannel().flatMap(textChannel -> {
                                             return textChannel.createMessage(
-                                                    "Skipping " +
-                                                    audioManager.getPlayer().getPlayingTrack().getInfo().title
+                                                    "Skipping `" +
+                                                    audioManager.getPlayer().getPlayingTrack().getInfo().title + "`"
                                             );
                                         })
                                         .subscribe();
 
                                 // Perform a skip which returns a boolean value.
                                 // If that value is false, then we need to destroy the player because we're out of songs.
-                                if(!audioManager.getScheduler().skip()) {
+                                if(!audioManager.getScheduler().nextTrack()) {
                                     audioManager.getPlayer().destroy();
                                 }
                             })
@@ -212,10 +278,10 @@ public class botDriver {
                                     (currSTimeSeconds % 60)); // Seconds
 
                             return channel.createMessage(
-                                "Now playing: " +
-                                currTrack.getInfo().title + "\nBy: " +
-                                currTrack.getInfo().author + "\nAt: " +
-                                currSTime + "\nFound At: " +
+                                "Now playing: `" +
+                                currTrack.getInfo().title + "`\nBy: `" +
+                                currTrack.getInfo().author + "`\nAt: `" +
+                                currSTime + "`\nFound At: " +
                                 currTrack.getInfo().uri + "\n"
                             );
                             })
@@ -334,7 +400,7 @@ public class botDriver {
                         message.getChannel()
                                 .flatMap(channel -> {
                                     return channel.createMessage(
-                                            "Seeking to " + givenPosition
+                                            "Seeking to `" + givenPosition + "`"
                                     );
                                 })
                                 .subscribe();
@@ -344,7 +410,7 @@ public class botDriver {
                         message.getChannel()
                                 .flatMap(channel -> {
                                     return channel.createMessage(
-                                            "Couldn't seek to that position. Try Hours:Minutes:Seconds or Minutes:Seconds " +
+                                            "Couldn't seek to that position. Try `Hours:Minutes:Seconds` or `Minutes:Seconds` " +
                                             "with numeric values in the appropriate places."
                                     );
                                 })
@@ -354,11 +420,108 @@ public class botDriver {
                 })
                 .then());
 
+        // QUEUE
+        // Show the queue of songs that are coming next
+        commands.put("queue", event -> Mono.justOrEmpty(event.getMessage())
+                .doOnNext(message -> {
+                    // Get the guild ID
+                    Snowflake guildID = message.getGuildId().orElseThrow(RuntimeException::new);
+
+                    // Grab the audio manager
+                    GuildAudioManager guildAudio = GuildAudioManager.of(guildID);
+
+                    // Grab the queue
+                    BlockingQueue<AudioTrack> queue = guildAudio.getScheduler().queue;
+
+                    message.getChannel()
+                            .flatMap(channel -> {
+                                // Create our initial return message
+                                String returnMessage = "";
+
+                                // If the queue is empty return this message
+                                if (queue.isEmpty()) {
+                                    returnMessage = "The queue is currently empty";
+                                }
+                                // Else create our queue message with a maximum of 20 items to prevent overflow in discord.
+                                else {
+                                    final List<AudioTrack> trackList = new ArrayList<>(queue);
+                                    final int trackCount = Math.min(queue.size(), 20);
+
+                                    for (int i = 0; i < trackCount; i++){
+                                        final AudioTrack track = trackList.get(i);
+                                        final AudioTrackInfo info = track.getInfo();
+
+                                        returnMessage = returnMessage + "#" +
+                                                (i + 1) +
+                                                " `" + info.title + "` " +
+                                                " by `" +
+                                                info.author + "` [`" +
+                                                formatTime(track.getDuration()) + "`]\n";
+                                    }
+
+                                    if (trackList.size() > trackCount) {
+                                        returnMessage = returnMessage + " and `" +
+                                                String.valueOf(trackList.size() - trackCount) + "` more...";
+                                    }
+                                }
+                                return channel.createMessage(returnMessage);
+
+                            }).subscribe();
+                })
+                .then());
+
+        // REMOVE
+        // Removes an item from the queue at a given address
+        commands.put("remove", event -> Mono.justOrEmpty(event.getMessage())
+                .doOnNext(message -> {
+                    // Create our initial return string
+                    String returnMessage = "";
+
+                    // Get the guild ID
+                    Snowflake guildID = message.getGuildId().orElseThrow(RuntimeException::new);
+
+                    // Get the player
+                    GuildAudioManager audioManager = GuildAudioManager.of(guildID);
+
+                    //Get the scheduler
+                    TrackScheduler scheduler = audioManager.getScheduler();
+
+                    // Make a list we can easily get to the value of
+                    List<AudioTrack> trackList = new ArrayList<>(scheduler.queue);
+
+                    try {
+                        // Get our track
+                        AudioTrack target = trackList.get(Integer.valueOf(message.getContent().split(" ")[1]) - 1);
+
+                        if (scheduler.queue.remove(target)) {
+                            returnMessage = "Removed `" + target.getInfo().title +
+                                    "` from the queue!";
+                        } else {
+                            returnMessage = "Unable to remove `" + target.getInfo().title + "` from the queue...";
+                        }
+
+                    } catch (Exception e) {
+                        returnMessage = "Invalid Command. Try remove followed by the integer position of the song in the queue";
+                    }
+
+                    // Send our result over discord
+                    String finalMessage = returnMessage;
+                    message.getChannel().flatMap(channel -> {
+                        return channel.createMessage(finalMessage);
+                    }).subscribe();
+
+                })
+                .then());
+
+
+        // ########################### CONNECTION LOGIC ##################################
         // Creates our connection and stops the code from running until the bot is logged in.
         // Builds the client
         final GatewayDiscordClient client =DiscordClientBuilder.create(bToken).build().login().block();
 
-        // Constructs simple ping pong command to test that the bot is working properly
+
+
+        // ########################## COMMAND LISTENER $##################################
         client.getEventDispatcher().on(MessageCreateEvent.class)
                 // 3.1 Message.getContent() is a String
                 .flatMap(event -> Mono.just(event.getMessage().getContent())
@@ -371,6 +534,7 @@ public class botDriver {
 
 
 
+        // ########################### DISCONNECT ########################################
         // This closes the bot when disconnected.
         client.onDisconnect().block();
     }

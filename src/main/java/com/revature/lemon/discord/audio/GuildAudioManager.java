@@ -17,12 +17,12 @@ public final class GuildAudioManager {
     }
 
     private final AudioPlayer player;
-    private final AudioTrackScheduler scheduler;
+    private final TrackScheduler scheduler;
     private final LavaPlayerAudioProvider provider;
 
     private GuildAudioManager() {
         player = PLAYER_MANAGER.createPlayer();
-        scheduler = new AudioTrackScheduler(player);
+        scheduler = new TrackScheduler(player);
         provider = new LavaPlayerAudioProvider(player);
 
         player.addListener(scheduler);
@@ -32,7 +32,7 @@ public final class GuildAudioManager {
         return player;
     }
 
-    public AudioTrackScheduler getScheduler() {
+    public TrackScheduler getScheduler() {
         return scheduler;
     }
 
