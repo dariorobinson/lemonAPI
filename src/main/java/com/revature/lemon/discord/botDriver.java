@@ -114,7 +114,7 @@ public class botDriver {
                                             GuildAudioManager audioManager = GuildAudioManager.of(playerID);
 
                                             // Boolean publisher to tell when there's nothing playing
-                                            final Publisher<Boolean> isPlaying = channel.getVoiceStates()
+                                            Publisher<Boolean> isPlaying = channel.getVoiceStates()
                                                     .map(currPlaying -> audioManager.getPlayer().getPlayingTrack() == null);
 
                                             // After 10 seconds, check that music is playing. If not, then we leave the channel.
@@ -132,7 +132,18 @@ public class botDriver {
                                                     .then();
 
                                             // Disconnect the bot if either onDelay or onEvent are completed!
-                                            return Mono.first(onDelay, onEvent).then(connection.disconnect());
+                                            return Mono.first(onDelay, onEvent)
+                                                    .doOnNext(test -> {
+                                                        // Send the message that we're leaving
+                                                        message.getChannel().flatMap(textChannel -> {
+                                                                    return textChannel.createMessage(
+                                                                            "Goodbye!"
+                                                                    );
+                                                                })
+                                                                .subscribe();
+                                                        audioManager.getPlayer().destroy();
+                                                        connection.disconnect();
+                                                    }).then();
                                     });
                         })
                         .subscribe();
@@ -270,33 +281,30 @@ public class botDriver {
         // If there is no next song, stops playing altogether.
         commands.put("skip", event -> Mono.justOrEmpty(event.getMessage())
                 .doOnNext(message -> {
+                    Snowflake guildID = message.getGuildId().orElseThrow(RuntimeException::new);
+                    GuildAudioManager audioManager = GuildAudioManager.of(guildID);
                     // Find the current user's voice channel and skip the currently playing song.
-                    message.getAuthorAsMember()
-                            .flatMap(Member::getVoiceState)
-                            .flatMap(VoiceState::getChannel)
-                            .doOnNext(channel -> {
-                                // Get the guild ID for manipulation
-                                Snowflake snowflake = channel.getGuildId();
+                    if (audioManager.getPlayer().getPlayingTrack() != null) {
+                        message.getAuthorAsMember()
+                                .flatMap(Member::getVoiceState)
+                                .flatMap(VoiceState::getChannel)
+                                .doOnNext(channel -> {
 
-                                // Grab the audio manager from the guild ID
-                                GuildAudioManager audioManager = GuildAudioManager.of(snowflake);
+                                    // Tell them the skip is happening
+                                    String output = "Skipping `" + audioManager.getPlayer().getPlayingTrack().getInfo().title + "`";
+                                    message.getChannel().flatMap(textChannel -> textChannel.createMessage(output)).subscribe();
 
-                                // Tell them the skip is happening
-                                message.getChannel().flatMap(textChannel -> {
-                                            return textChannel.createMessage(
-                                                    "Skipping `" +
-                                                    audioManager.getPlayer().getPlayingTrack().getInfo().title + "`"
-                                            );
-                                        })
-                                        .subscribe();
-
-                                // Perform a skip which returns a boolean value.
-                                // If that value is false, then we need to destroy the player because we're out of songs.
-                                if(!audioManager.getScheduler().nextTrack()) {
-                                    audioManager.getPlayer().destroy();
-                                }
-                            })
-                            .subscribe();
+                                    // Perform a skip which returns a boolean value.
+                                    // If that value is false, then we need to destroy the player because we're out of songs.
+                                    if (!audioManager.getScheduler().nextTrack()) {
+                                        audioManager.getPlayer().destroy();
+                                    }
+                                })
+                                .subscribe();
+                    } else{
+                        String output = "Unable to skip!";
+                        message.getChannel().flatMap(textChannel -> textChannel.createMessage(output)).subscribe();
+                    }
 
                 })
                 .then());
@@ -319,15 +327,18 @@ public class botDriver {
                                 // Create a duration to convert to seconds properly for string formatting
                                 Duration currDurr = Duration.ofMillis(currTrack.getPosition());
                                 long currSTimeSeconds = currDurr.getSeconds();
+                                /*
                                 String currSTime = String.format("%02d:%02d:%02d",
                                         currSTimeSeconds / 3600, // Hours
                                         (currSTimeSeconds % 3600) / 60 , // Minutes
-                                        (currSTimeSeconds % 60)); // Seconds
+                                        (currSTimeSeconds % 60)); // Seconds */
+                                String currSTime = formatTime(currSTimeSeconds);
 
                                 nowPlaying = "Now playing: `" +
                                         currTrack.getInfo().title + "`\nBy: `" +
                                         currTrack.getInfo().author + "`\nAt: `" +
-                                        currSTime + "`\nFound At: " +
+                                        currSTime +  "` / `" + formatTime(currTrack.getDuration())+
+                                        "`\nFound At: " +
                                         currTrack.getInfo().uri + "\n";
                             } catch (Exception e) {
                                 return channel.createMessage(
@@ -564,6 +575,19 @@ public class botDriver {
                 })
                 .then());
 
+        // PLAYLIST
+        // TODO: Implement me
+        // Takes the users snowflake and matches it to one in our database
+        // Then searches for playlists available to them and loads that playlist into our bot
+        commands.put("playlist", event -> Mono.justOrEmpty(event.getMessage())
+                .doOnNext(message -> {
+                    String output = "Sorry, I'm not ready to be used yet!";
+
+                    String finalOutput = output;
+                    message.getChannel().flatMap(channel -> channel.createMessage(finalOutput));
+                })
+                .then());
+
 
         // ########################### CONNECTION LOGIC ##################################
         // Creates our connection and stops the code from running until the bot is logged in.
@@ -573,15 +597,27 @@ public class botDriver {
 
 
         // ########################## COMMAND LISTENER $##################################
-        client.getEventDispatcher().on(MessageCreateEvent.class)
-                // 3.1 Message.getContent() is a String
-                .flatMap(event -> Mono.just(event.getMessage().getContent())
-                        .flatMap(content -> Flux.fromIterable(commands.entrySet())
-                                // We will be using ! as our "prefix" to any command in the system.
-                                .filter(entry -> content.startsWith('!' + entry.getKey()))
-                                .flatMap(entry -> entry.getValue().execute(event))
-                                .next()))
-                .subscribe();
+        try {
+            client.getEventDispatcher().on(MessageCreateEvent.class)
+                    // 3.1 Message.getContent() is a String
+                    .flatMap(event -> Mono.just(event.getMessage().getContent())
+                            .flatMap(content -> Flux.fromIterable(commands.entrySet())
+                                    // We will be using ! as our "prefix" to any command in the system.
+                                    .filter(entry -> content.startsWith('!' + entry.getKey()))
+                                    .flatMap(entry -> entry.getValue().execute(event))
+                                    .next()))
+                    .subscribe();
+        } catch (Exception e) {
+            client.getEventDispatcher().on(MessageCreateEvent.class)
+                            .flatMap(event -> Mono.just(event.getMessage())
+                                    .doOnNext(message -> {
+                                        message.getChannel().doOnNext(channel -> {
+                                            channel.createMessage("Error! Something went wrong... restarting...");
+                                        }).subscribe();
+                                    })).next();
+            System.out.println(e.getMessage());
+        }
+
 
         // After a certain delay, disconnect from a channel you're connected to.
 
