@@ -1,8 +1,8 @@
 package com.revature.lemon.playlist;
 
-import com.revature.lemon.song.Song;
-import com.revature.lemon.userplaylist.UserPlaylistRole;
-import com.revature.lemon.common.model.SongPlaylistOrder;
+import com.revature.lemon.playlist.dtos.requests.NewPlaylistRequest;
+import com.revature.lemon.userplaylist.UserPlaylist;
+import com.revature.lemon.common.model.SongPlaylist;
 import com.revature.lemon.user.User;
 
 import javax.persistence.*;
@@ -29,13 +29,20 @@ public class Playlist {
 
     //CascadeType is used to let hibernate know that it needs to persist/remove/merge etc. cascaded tables when playlist table gets updated
     @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL)
-    private List<UserPlaylistRole> playlistRole;
+    private List<UserPlaylist> userRoleList;
 
-    @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL)
-    private List<SongPlaylistOrder> songOrder;
+    @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SongPlaylist> songOrderList;
 
     public Playlist() {
         super();
+    }
+
+    public Playlist(NewPlaylistRequest playlistRequest) {
+       this.name = playlistRequest.getName();
+       this.description = playlistRequest.getDescription();
+       this.access = playlistRequest.getAccess();
+       addCreator(playlistRequest.getCreator());
     }
 
     public String getId() {
@@ -70,20 +77,21 @@ public class Playlist {
         this.access = access;
     }
 
-    public List<UserPlaylistRole> getPlayListRole() {
-        return playlistRole;
+    public List<UserPlaylist> getPlayListRole() {
+        return userRoleList;
     }
 
-    public void setPlaylistRole(List<UserPlaylistRole> playlistRole) {
-        this.playlistRole = playlistRole;
+    public void setUserRoleList(List<UserPlaylist> userRoleList) {
+        this.userRoleList = userRoleList;
     }
 
-    public List<SongPlaylistOrder> getSongOrder() {
-        return songOrder;
+    public List<SongPlaylist> getSongOrderList() {
+        return songOrderList;
     }
 
-    public void setSongOrder(List<SongPlaylistOrder> songOrder) {
-        this.songOrder = songOrder;
+    public void setSongOrderList(List<SongPlaylist> songOrderList) {
+        this.songOrderList.clear();
+        this.songOrderList.addAll(songOrderList);
     }
 
     /**
@@ -92,16 +100,11 @@ public class Playlist {
      * @param user current session user
      */
     public void addCreator(User user) {
-        UserPlaylistRole newUser = new UserPlaylistRole(user, this);
-        List<UserPlaylistRole> newPlaylistRole = new ArrayList<>();
-        setPlaylistRole(newPlaylistRole);
+        UserPlaylist newUser = new UserPlaylist(user, this);
+        List<UserPlaylist> newPlaylistRole = new ArrayList<>();
+        setUserRoleList(newPlaylistRole);
         newUser.setUserRole("CREATOR");
-        playlistRole.add(newUser);
-    }
-
-    public void addSong(Song song) {
-        SongPlaylistOrder newSong = new SongPlaylistOrder(song, this);
-        songOrder.add(newSong);
+        userRoleList.add(newUser);
     }
 
     @Override
@@ -109,12 +112,12 @@ public class Playlist {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Playlist playlist = (Playlist) o;
-        return Objects.equals(id, playlist.id) && Objects.equals(name, playlist.name) && Objects.equals(description, playlist.description) && access == playlist.access && Objects.equals(playlistRole, playlist.playlistRole) && Objects.equals(songOrder, playlist.songOrder);
+        return Objects.equals(id, playlist.id) && Objects.equals(name, playlist.name) && Objects.equals(description, playlist.description) && Objects.equals(access, playlist.access) && Objects.equals(userRoleList, playlist.userRoleList) && Objects.equals(songOrderList, playlist.songOrderList);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, description, access, playlistRole, songOrder);
+        return Objects.hash(id, name, description, access, userRoleList, songOrderList);
     }
 
     @Override
@@ -124,8 +127,8 @@ public class Playlist {
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", access=" + access +
-                ", playlistRole=" + playlistRole +
-                ", songOrder=" + songOrder +
+                ", playlistRole=" + userRoleList +
+                ", songOrder=" + songOrderList +
                 '}';
     }
 }

@@ -1,6 +1,6 @@
 package com.revature.lemon.user;
 
-import com.revature.lemon.userplaylist.UserPlaylistRole;
+import com.revature.lemon.userplaylist.UserPlaylist;
 
 import javax.persistence.*;
 import java.util.List;
@@ -23,7 +23,7 @@ public class User {
     private String discriminator;
 
     @OneToMany(mappedBy = "user")
-    private List<UserPlaylistRole> playlistRole;
+    private List<UserPlaylist> playlistRole;
 
     public User() {super();}
     public User(String id, String username, String discriminator){
@@ -56,11 +56,11 @@ public class User {
         this.discriminator = discriminator;
     }
 
-    public List<UserPlaylistRole> getPlaylistRole() {
+    public List<UserPlaylist> getPlaylistRole() {
         return playlistRole;
     }
 
-    public void setPlaylistRole(List<UserPlaylistRole> playlistRole) {
+    public void setPlaylistRole(List<UserPlaylist> playlistRole) {
         this.playlistRole = playlistRole;
     }
 

@@ -1,17 +1,15 @@
 package com.revature.lemon.playlist;
 
 import com.revature.lemon.common.exceptions.ResourceNotFoundException;
-import com.revature.lemon.common.model.SongPlaylistOrder;
+import com.revature.lemon.common.model.SongPlaylist;
+import com.revature.lemon.common.model.SongPlaylistKey;
 import com.revature.lemon.playlist.dtos.requests.AddSongRequest;
 import com.revature.lemon.playlist.dtos.requests.NewPlaylistRequest;
 import com.revature.lemon.song.Song;
-import com.revature.lemon.song.dtos.NewSongRequest;
-import com.revature.lemon.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -30,44 +28,35 @@ public class PlaylistService {
      * Turns the playlistRequest into a playlist to be persisted to the database
      */
     public Playlist createNewPlaylist(@Valid NewPlaylistRequest playlistRequest) {
-        User user = playlistRequest.getCreator();
-        Playlist playlist = new Playlist();
+        Playlist playlist = new Playlist(playlistRequest);
         playlist.setId(UUID.randomUUID().toString());
-        playlist.setName(playlistRequest.getName());
-        playlist.setDescription(playlistRequest.getDescription());
-        playlist.setAccess(playlistRequest.getAccess());
-        playlist.addCreator(user);
         playlistRepository.save(playlist);
         return playlist;
     }
 
-    public void addSongToPlaylist(AddSongRequest newSongRequest) {
+    /**
+     * Grabs the list of songs from newSongRequest and maps it to an associate table between songs and playlist.
+     * Set that table to playlist then save
+     * @param newSongRequest contains a playlistId and a list of songs
+     */
+    public void addSongsToPlaylist(AddSongRequest newSongRequest) {
 
-        Song song = new Song();
-        System.out.println(newSongRequest.getPlaylistId());
-        Playlist playlist = playlistRepository.findById(newSongRequest.getPlaylistId()).orElseThrow(ResourceNotFoundException::new);
-        System.out.println(newSongRequest.getSongList().get(0));
-        System.out.println(newSongRequest.getSongList().get(1));
-        System.out.println(newSongRequest.getSongList().get(2));
-        if (playlist.getSongOrder() == null) {
-            System.out.println("is null");
-            List<SongPlaylistOrder> newSongOrder = new ArrayList<>();
-            playlist.setSongOrder(newSongOrder);
-            playlist.addSong(song);
-        } else {
-            List<SongPlaylistOrder> newSongListOrder;
-            List<Song> songList = newSongRequest.getSongList();
+        //load up the playlist
+        Playlist playlist = playlistRepository.findById(newSongRequest.getPlaylistId())
+                                              .orElseThrow(ResourceNotFoundException::new);
 
-            newSongListOrder = songList.stream().map(SongPlaylistOrder::new).collect(Collectors.toList());
-            playlist.setSongOrder(newSongListOrder);
+        List<Song> songList = newSongRequest.getSongList();
+        List<SongPlaylist> newSongOrderList = songList.stream()
+                                                 .map(SongPlaylist::new)
+                                                 .collect(Collectors.toList());
+        //For each song in the request, make a new composite key and assign its order from its position in the list
+        for(int i=0; i < songList.size(); i++) {
+            Song song = songList.get(i);
+            newSongOrderList.get(i).setId(new SongPlaylistKey(song.getUrl(),playlist.getId()));
+            newSongOrderList.get(i).setSongOrder(i+1);
         }
-
-
-        System.out.println(playlist.getSongOrder().get(0));
+        playlist.setSongOrderList(newSongOrderList);
         playlistRepository.save(playlist);
     }
-
-
-
 
 }

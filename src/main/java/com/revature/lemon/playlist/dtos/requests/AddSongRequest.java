@@ -19,7 +19,6 @@ public class AddSongRequest {
         this.playlistId = playlistId;
     }
 
-
     public List<Song> getSongList() {
         return songList;
     }

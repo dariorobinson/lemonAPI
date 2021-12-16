@@ -6,7 +6,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 @Embeddable
-public class SongPlaylistOrderKey implements Serializable {
+public class SongPlaylistKey implements Serializable {
 
     @Column(name = "playlist_id")
     private String playlistId;
@@ -14,10 +14,11 @@ public class SongPlaylistOrderKey implements Serializable {
     @Column(name = "song_url")
     private String songUrl;
 
-    public SongPlaylistOrderKey() {
+    public SongPlaylistKey() {
 
     }
-    public SongPlaylistOrderKey(String songUrl, String playlistId) {
+
+    public SongPlaylistKey(String songUrl, String playlistId) {
         this.songUrl = songUrl;
         this.playlistId = playlistId;
     }
@@ -41,7 +42,7 @@ public class SongPlaylistOrderKey implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        SongPlaylistOrderKey that = (SongPlaylistOrderKey) o;
+        SongPlaylistKey that = (SongPlaylistKey) o;
         return Objects.equals(playlistId, that.playlistId) && Objects.equals(songUrl, that.songUrl);
     }
 

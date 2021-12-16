@@ -7,10 +7,10 @@ import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
-public class SongPlaylistOrder {
+public class SongPlaylist {
 
     @EmbeddedId
-    private SongPlaylistOrderKey id;
+    private SongPlaylistKey id;
 
     @ManyToOne
     @MapsId("id")
@@ -24,24 +24,24 @@ public class SongPlaylistOrder {
 
     private int songOrder;
 
-    public SongPlaylistOrder() {
+    public SongPlaylist() {
     }
 
-    public SongPlaylistOrder(Song song) {
+    public SongPlaylist(Song song) {
         this.song = song;
     }
 
-    public SongPlaylistOrder(Song song, Playlist playlist) {
+    public SongPlaylist(Song song, Playlist playlist) {
         this.song = song;
         this.playlist = playlist;
-        setId(new SongPlaylistOrderKey(song.getUrl(), playlist.getId()));
+        setId(new SongPlaylistKey(song.getUrl(), playlist.getId()));
     }
 
-    public SongPlaylistOrderKey getId() {
+    public SongPlaylistKey getId() {
         return id;
     }
 
-    public void setId(SongPlaylistOrderKey id) {
+    public void setId(SongPlaylistKey id) {
         this.id = id;
     }
 
@@ -65,7 +65,7 @@ public class SongPlaylistOrder {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        SongPlaylistOrder that = (SongPlaylistOrder) o;
+        SongPlaylist that = (SongPlaylist) o;
         return songOrder == that.songOrder && Objects.equals(id, that.id) && Objects.equals(playlist, that.playlist) && Objects.equals(song, that.song);
     }
 
@@ -79,6 +79,7 @@ public class SongPlaylistOrder {
         return "SongPlaylistOrder{" +
                 "id=" + id +
                 ", song=" + song +
+                ", songOrder=" + songOrder +
                 '}';
     }
 }

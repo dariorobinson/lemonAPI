@@ -1,10 +1,7 @@
 package com.revature.lemon.song;
 
-import com.revature.lemon.common.model.SongPlaylistOrder;
-
 import javax.persistence.*;
 import java.time.Duration;
-import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -20,11 +17,10 @@ public class Song {
 
     @Column
     private Duration duration;
-
-    //will probably need a cascade attribute like playlists
+/*
     @OneToMany(mappedBy = "song")
     List<SongPlaylistOrder> songOrder;
-
+*/
     public String getUrl() {
         return url;
     }
@@ -48,6 +44,8 @@ public class Song {
     public void setDuration(Duration duration) {
         this.duration = duration;
     }
+/*
+Probably won't need this, Song shouldn't need a reference to the playlist, Unidirectional
 
     public List<SongPlaylistOrder> getSongOrder() {
         return songOrder;
@@ -56,18 +54,19 @@ public class Song {
     public void setSongOrder(List<SongPlaylistOrder> songOrder) {
         this.songOrder = songOrder;
     }
+    */
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Song song = (Song) o;
-        return Objects.equals(url, song.url) && Objects.equals(name, song.name) && Objects.equals(duration, song.duration) && Objects.equals(songOrder, song.songOrder);
+        return Objects.equals(url, song.url) && Objects.equals(name, song.name) && Objects.equals(duration, song.duration);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(url, name, duration, songOrder);
+        return Objects.hash(url, name, duration);
     }
 
     @Override

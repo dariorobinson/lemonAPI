@@ -7,10 +7,10 @@ import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
-public class UserPlaylistRole {
+public class UserPlaylist {
 
     @EmbeddedId
-    private UserPlaylistRoleKey id;
+    private UserPlaylistKey id;
 
     @ManyToOne
     @MapsId("userId")
@@ -25,20 +25,20 @@ public class UserPlaylistRole {
     @Column()
     private String userRole;
 
-    public UserPlaylistRole() {
+    public UserPlaylist() {
     }
 
-    public UserPlaylistRole(User user, Playlist playlist) {
+    public UserPlaylist(User user, Playlist playlist) {
         this.user = user;
         this.playlist = playlist;
-        setId(new UserPlaylistRoleKey(user.getId(), playlist.getId()));
+        setId(new UserPlaylistKey(user.getId(), playlist.getId()));
     }
 
-    public UserPlaylistRoleKey getId() {
+    public UserPlaylistKey getId() {
         return id;
     }
 
-    public void setId(UserPlaylistRoleKey id) {
+    public void setId(UserPlaylistKey id) {
         this.id = id;
     }
 
@@ -62,7 +62,7 @@ public class UserPlaylistRole {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        UserPlaylistRole that = (UserPlaylistRole) o;
+        UserPlaylist that = (UserPlaylist) o;
         return Objects.equals(id, that.id) && Objects.equals(user, that.user) && Objects.equals(playlist, that.playlist) && Objects.equals(userRole, that.userRole);
     }
 

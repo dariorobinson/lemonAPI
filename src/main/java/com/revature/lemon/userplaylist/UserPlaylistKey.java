@@ -6,7 +6,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 @Embeddable
-public class UserPlaylistRoleKey implements Serializable {
+public class UserPlaylistKey implements Serializable {
 
     @Column(name = "user_id")
     private String userId;
@@ -14,11 +14,11 @@ public class UserPlaylistRoleKey implements Serializable {
     @Column(name = "playlist_id")
     private String playlistId;
 
-    private UserPlaylistRoleKey() {
+    private UserPlaylistKey() {
 
     }
 
-    public UserPlaylistRoleKey(String userId, String playlistId) {
+    public UserPlaylistKey(String userId, String playlistId) {
         this.userId = userId;
         this.playlistId = playlistId;
     }
@@ -43,7 +43,7 @@ public class UserPlaylistRoleKey implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        UserPlaylistRoleKey that = (UserPlaylistRoleKey) o;
+        UserPlaylistKey that = (UserPlaylistKey) o;
         return Objects.equals(userId, that.userId) && Objects.equals(playlistId, that.playlistId);
     }
 
