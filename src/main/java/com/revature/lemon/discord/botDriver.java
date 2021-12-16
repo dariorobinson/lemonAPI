@@ -16,9 +16,14 @@ import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBu
 import discord4j.common.util.Snowflake;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
+import discord4j.core.event.domain.VoiceStateUpdateEvent;
+import discord4j.core.event.domain.channel.TypingStartEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.VoiceState;
+import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Message;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -96,7 +101,39 @@ public class botDriver {
                                 );
                             })
                             .subscribe();
-                            return channel.join(spec -> spec.setProvider(GuildAudioManager.of(channel.getGuildId()).getProvider()));
+                            return channel.join(spec -> spec.setProvider(GuildAudioManager.of(channel.getGuildId()).getProvider()))
+                                    // Leave automatically if the bot is alone.
+                                    .flatMap(connection -> {
+                                            // The bot itself has a VoiceState; 1 VoiceState signals bot is alone
+                                            final Publisher<Boolean> voiceStateCounter = channel.getVoiceStates()
+                                                    .count()
+                                                    .map(count -> 1L == count);
+
+                                            // Get the Audio Manager
+                                            Snowflake playerID = channel.getGuildId();
+                                            GuildAudioManager audioManager = GuildAudioManager.of(playerID);
+
+                                            // Boolean publisher to tell when there's nothing playing
+                                            final Publisher<Boolean> isPlaying = channel.getVoiceStates()
+                                                    .map(currPlaying -> audioManager.getPlayer().getPlayingTrack() == null);
+
+                                            // After 10 seconds, check that music is playing. If not, then we leave the channel.
+                                            final Mono<Void> onDelay = Mono.delay(Duration.ofSeconds(10L))
+                                                    .filterWhen(filler -> isPlaying)
+                                                    .switchIfEmpty(Mono.never())
+                                                    .then();
+
+                                            // As people join and leave `channel`, check if the bot is alone.
+                                            // Note the first filter is not strictly necessary, but it does prevent many unnecessary cache calls
+                                            final Mono<Void> onEvent = channel.getClient().getEventDispatcher().on(VoiceStateUpdateEvent.class)
+                                                    .filter(agEvent -> agEvent.getOld().flatMap(VoiceState::getChannelId).map(channel.getId()::equals).orElse(false))
+                                                    .filterWhen(ignored -> voiceStateCounter)
+                                                    .next()
+                                                    .then();
+
+                                            // Disconnect the bot if either onDelay or onEvent are completed!
+                                            return Mono.first(onDelay, onEvent).then(connection.disconnect());
+                                    });
                         })
                         .subscribe();
 
@@ -129,6 +166,7 @@ public class botDriver {
 
                         // Create a new load requeuest using a new handler that overrides the usual so we can access
                         // both the channel and the track for parsing.
+                        String finalAudioUrl = audioUrl;
                         PLAYER_MANAGER.loadItemOrdered(audioManager, audioUrl, new AudioLoadResultHandler() {
                             @Override
                             public void trackLoaded(AudioTrack track) {
@@ -172,12 +210,19 @@ public class botDriver {
 
                             @Override
                             public void noMatches() {
-                                //
+                                command.getChannel().flatMap(channel -> {
+                                    String message = "Unable to find a match for " + finalAudioUrl;
+                                    return channel.createMessage(message);
+                                }).subscribe();
                             }
 
                             @Override
                             public void loadFailed(FriendlyException exception) {
-                                //
+                                command.getChannel().flatMap(channel -> {
+                                    String message = "Unable to load " + finalAudioUrl + " if it is age restricted, " +
+                                            "this cannot be helped. Sorry.";
+                                    return channel.createMessage(message);
+                                }).subscribe();
                             }
                         });
                     } catch (Exception E) {
@@ -265,25 +310,31 @@ public class botDriver {
 
                         // Enter the message's channel
                         message.getChannel().flatMap(channel -> {
-                            // Get the currently playing track
-                            AudioTrack currTrack = GuildAudioManager.of(guildID).getPlayer().getPlayingTrack();
+                            String nowPlaying = "Placeholder";
+                            try {
+                                // Get the currently playing track
+                                AudioTrack currTrack = GuildAudioManager.of(guildID).getPlayer().getPlayingTrack();
 
-                            // Get the current position in the track as a string
-                            // Create a duration to convert to seconds properly for string formatting
-                            Duration currDurr = Duration.ofMillis(currTrack.getPosition());
-                            long currSTimeSeconds = currDurr.getSeconds();
-                            String currSTime = String.format("%02d:%02d:%02d",
-                                    currSTimeSeconds / 3600, // Hours
-                                    (currSTimeSeconds % 3600) / 60 , // Minutes
-                                    (currSTimeSeconds % 60)); // Seconds
+                                // Get the current position in the track as a string
+                                // Create a duration to convert to seconds properly for string formatting
+                                Duration currDurr = Duration.ofMillis(currTrack.getPosition());
+                                long currSTimeSeconds = currDurr.getSeconds();
+                                String currSTime = String.format("%02d:%02d:%02d",
+                                        currSTimeSeconds / 3600, // Hours
+                                        (currSTimeSeconds % 3600) / 60 , // Minutes
+                                        (currSTimeSeconds % 60)); // Seconds
 
-                            return channel.createMessage(
-                                "Now playing: `" +
-                                currTrack.getInfo().title + "`\nBy: `" +
-                                currTrack.getInfo().author + "`\nAt: `" +
-                                currSTime + "`\nFound At: " +
-                                currTrack.getInfo().uri + "\n"
-                            );
+                                nowPlaying = "Now playing: `" +
+                                        currTrack.getInfo().title + "`\nBy: `" +
+                                        currTrack.getInfo().author + "`\nAt: `" +
+                                        currSTime + "`\nFound At: " +
+                                        currTrack.getInfo().uri + "\n";
+                            } catch (Exception e) {
+                                return channel.createMessage(
+                                        nowPlaying = "There's nothing playing right now..."
+                                );
+                            }
+                            return channel.createMessage(nowPlaying);
                             })
                             .subscribe(); // Necessary for nested streams.
                         }
@@ -386,7 +437,7 @@ public class botDriver {
 
                             // Case for seconds
                             if (minSec - givenPosition.split(":").length == -1) {
-                                // Add the minutes as miliseconds to the seekTime
+                                // Add the seconds as miliseconds to the seekTime
                                 seekTime = seekTime + Long.valueOf(givenPosition.split(":")[minSec]) * 1000L;
                             }
 
@@ -531,6 +582,34 @@ public class botDriver {
                                 .flatMap(entry -> entry.getValue().execute(event))
                                 .next()))
                 .subscribe();
+
+        // After a certain delay, disconnect from a channel you're connected to.
+
+
+
+    /* Old Code
+        client.getEventDispatcher().on(TypingStartEvent.class)
+                .flatMap(event -> Mono.just(event.get())
+                        .doOnNext(author -> {
+                            Snowflake guildID = author.get();
+                            GuildAudioManager audioManager = GuildAudioManager.of(guildID);
+                            author.getVoiceState()
+                                    .flatMap(VoiceState::getChannel)
+                                    .doOnNext(vc -> {
+                                        System.out.println("Inside of the do on next for auto disconnect!");
+                                        if (audioManager.getPlayer().getPlayingTrack() == null){
+                                            if (System.currentTimeMillis() - audioManager.getIdleTime() >= 180000){
+                                                vc.sendDisconnectVoiceState();
+                                            }
+                                        }
+                                        else {
+                                            audioManager.setIdleTime(System.currentTimeMillis());
+                                        }
+
+                                    });
+                        })
+
+                ).subscribe(); */
 
 
 

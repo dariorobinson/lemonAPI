@@ -3,8 +3,10 @@ package com.revature.lemon.discord.audio;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import discord4j.common.util.Snowflake;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import static com.revature.lemon.discord.botDriver.PLAYER_MANAGER;
 
@@ -19,11 +21,13 @@ public final class GuildAudioManager {
     private final AudioPlayer player;
     private final TrackScheduler scheduler;
     private final LavaPlayerAudioProvider provider;
+    private Long idleTime;
 
     private GuildAudioManager() {
         player = PLAYER_MANAGER.createPlayer();
         scheduler = new TrackScheduler(player);
         provider = new LavaPlayerAudioProvider(player);
+        idleTime = System.currentTimeMillis();
 
         player.addListener(scheduler);
     }
@@ -38,5 +42,13 @@ public final class GuildAudioManager {
 
     public LavaPlayerAudioProvider getProvider() {
         return provider;
+    }
+
+    public Long getIdleTime() {
+        return idleTime;
+    }
+
+    public void setIdleTime(Long idleTime) {
+        this.idleTime = idleTime;
     }
 }
