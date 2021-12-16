@@ -14,6 +14,13 @@ public class SongPlaylistOrderKey implements Serializable {
     @Column(name = "song_url")
     private String songUrl;
 
+    public SongPlaylistOrderKey() {
+
+    }
+    public SongPlaylistOrderKey(String songUrl, String playlistId) {
+        this.songUrl = songUrl;
+        this.playlistId = playlistId;
+    }
     public String getPlaylistId() {
         return playlistId;
     }

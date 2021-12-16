@@ -1,5 +1,6 @@
 package com.revature.lemon.playlist;
 
+import com.revature.lemon.song.Song;
 import com.revature.lemon.userplaylist.UserPlaylistRole;
 import com.revature.lemon.common.model.SongPlaylistOrder;
 import com.revature.lemon.user.User;
@@ -30,7 +31,7 @@ public class Playlist {
     @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL)
     private List<UserPlaylistRole> playlistRole;
 
-    @OneToMany(mappedBy = "playlist")
+    @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL)
     private List<SongPlaylistOrder> songOrder;
 
     public Playlist() {
@@ -96,6 +97,11 @@ public class Playlist {
         setPlaylistRole(newPlaylistRole);
         newUser.setUserRole("CREATOR");
         playlistRole.add(newUser);
+    }
+
+    public void addSong(Song song) {
+        SongPlaylistOrder newSong = new SongPlaylistOrder(song, this);
+        songOrder.add(newSong);
     }
 
     @Override

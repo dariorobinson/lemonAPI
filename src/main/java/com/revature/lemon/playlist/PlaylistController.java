@@ -1,8 +1,10 @@
 package com.revature.lemon.playlist;
 
 import com.revature.lemon.common.util.web.Authenticated;
+import com.revature.lemon.playlist.dtos.requests.AddSongRequest;
 import com.revature.lemon.playlist.dtos.requests.AddUserRequest;
 import com.revature.lemon.playlist.dtos.requests.NewPlaylistRequest;
+import com.revature.lemon.song.dtos.NewSongRequest;
 import com.revature.lemon.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,6 +29,14 @@ public class PlaylistController {
     public Playlist createPlaylist(@RequestBody NewPlaylistRequest playlist, HttpSession session) {
         playlist.setCreator((User) session.getAttribute("authUser"));
         return playlistService.createNewPlaylist(playlist);
+    }
+
+    @PatchMapping(consumes = "application/json")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Authenticated //Change to new annotation. Having to do with the user role.
+    public void addSongToPlaylist(@RequestBody AddSongRequest newSongRequest) {
+
+        playlistService.addSongToPlaylist(newSongRequest);
     }
 
     //consider making a UserPlaylistRoleService or a UserPlaylistRoleRepository that PlaylistService gets injected with
