@@ -44,26 +44,25 @@ public class PlaylistService {
     public void addSongToPlaylist(AddSongRequest newSongRequest) {
 
         Song song = new Song();
-        System.out.println(newSongRequest.getPlaylistId());
+        song.setUrl(newSongRequest.getSongUrl());
         Playlist playlist = playlistRepository.findById(newSongRequest.getPlaylistId()).orElseThrow(ResourceNotFoundException::new);
-        System.out.println(newSongRequest.getSongList().get(0));
-        System.out.println(newSongRequest.getSongList().get(1));
-        System.out.println(newSongRequest.getSongList().get(2));
-        if (playlist.getSongOrder() == null) {
+        System.out.println(playlist);
+        if (playlist.getSongOrder().isEmpty()) {
             System.out.println("is null");
             List<SongPlaylistOrder> newSongOrder = new ArrayList<>();
             playlist.setSongOrder(newSongOrder);
             playlist.addSong(song);
         } else {
-            List<SongPlaylistOrder> newSongListOrder;
-            List<Song> songList = newSongRequest.getSongList();
+            System.out.println("not null");
+            playlist.addSong(song);
+            //List<SongPlaylistOrder> newSongListOrder;
+            //List<Song> songList = newSongRequest.getSongList();
 
-            newSongListOrder = songList.stream().map(SongPlaylistOrder::new).collect(Collectors.toList());
-            playlist.setSongOrder(newSongListOrder);
+
+            //newSongListOrder = songList.stream().map(SongPlaylistOrder::new).collect(Collectors.toList());
+           // playlist.setSongOrder(newSongListOrder);
         }
-
-
-        System.out.println(playlist.getSongOrder().get(0));
+        System.out.println(playlist);
         playlistRepository.save(playlist);
     }
 

@@ -9,7 +9,11 @@ import java.util.Objects;
 public class AddSongRequest {
 
     private String playlistId;
-    private List<Song> songList;
+    private String songUrl;
+
+    public AddSongRequest() {
+
+    }
 
     public String getPlaylistId() {
         return playlistId;
@@ -19,13 +23,12 @@ public class AddSongRequest {
         this.playlistId = playlistId;
     }
 
-
-    public List<Song> getSongList() {
-        return songList;
+    public String getSongUrl() {
+        return songUrl;
     }
 
-    public void setSongList(List<Song> songList) {
-        this.songList = songList;
+    public void setSongUrl(String songUrl) {
+        this.songUrl = songUrl;
     }
 
     @Override
@@ -33,19 +36,19 @@ public class AddSongRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AddSongRequest that = (AddSongRequest) o;
-        return Objects.equals(playlistId, that.playlistId) && Objects.equals(songList, that.songList);
+        return Objects.equals(playlistId, that.playlistId) && Objects.equals(songUrl, that.songUrl);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(playlistId, songList);
+        return Objects.hash(playlistId, songUrl);
     }
 
     @Override
     public String toString() {
         return "AddSongRequest{" +
                 "playlistId='" + playlistId + '\'' +
-                ", songList=" + songList +
+                ", songUrl='" + songUrl + '\'' +
                 '}';
     }
 }
