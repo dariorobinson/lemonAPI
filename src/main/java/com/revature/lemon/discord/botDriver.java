@@ -104,46 +104,49 @@ public class botDriver {
                             return channel.join(spec -> spec.setProvider(GuildAudioManager.of(channel.getGuildId()).getProvider()))
                                     // Leave automatically if the bot is alone.
                                     .flatMap(connection -> {
-                                            // The bot itself has a VoiceState; 1 VoiceState signals bot is alone
-                                            final Publisher<Boolean> voiceStateCounter = channel.getVoiceStates()
-                                                    .count()
-                                                    .map(count -> 1L == count);
+                                        // The bot itself has a VoiceState; 1 VoiceState signals bot is alone
+                                        final Publisher<Boolean> voiceStateCounter = channel.getVoiceStates()
+                                                .count()
+                                                .map(count -> 1L == count);
 
-                                            // Get the Audio Manager
-                                            Snowflake playerID = channel.getGuildId();
-                                            GuildAudioManager audioManager = GuildAudioManager.of(playerID);
+                                        // Get the Audio Manager
+                                        Snowflake playerID = channel.getGuildId();
+                                        GuildAudioManager audioManager = GuildAudioManager.of(playerID);
 
-                                            // Boolean publisher to tell when there's nothing playing
-                                            Publisher<Boolean> isPlaying = channel.getVoiceStates()
-                                                    .map(currPlaying -> audioManager.getPlayer().getPlayingTrack() == null);
+                                        // Boolean publisher to tell when there's nothing playing
+                                        Publisher<Boolean> isPlaying = channel.getVoiceStates()
+                                                .map(currPlaying -> audioManager.getPlayer().getPlayingTrack() == null);
 
-                                            // After 10 seconds, check that music is playing. If not, then we leave the channel.
-                                            final Mono<Void> onDelay = Mono.delay(Duration.ofSeconds(10L))
-                                                    .filterWhen(filler -> isPlaying)
-                                                    .switchIfEmpty(Mono.never())
-                                                    .then();
+                                        // After 10 seconds, check that music is playing. If not, then we leave the channel.
+                                        final Mono<Void> onDelay = Mono.delay(Duration.ofSeconds(15L))
+                                                .filterWhen(filler -> isPlaying)
+                                                .switchIfEmpty(Mono.never())
+                                                .then();
 
-                                            // As people join and leave `channel`, check if the bot is alone.
-                                            // Note the first filter is not strictly necessary, but it does prevent many unnecessary cache calls
-                                            final Mono<Void> onEvent = channel.getClient().getEventDispatcher().on(VoiceStateUpdateEvent.class)
-                                                    .filter(agEvent -> agEvent.getOld().flatMap(VoiceState::getChannelId).map(channel.getId()::equals).orElse(false))
-                                                    .filterWhen(ignored -> voiceStateCounter)
-                                                    .next()
-                                                    .then();
+                                        // As people join and leave `channel`, check if the bot is alone.
+                                        // Note the first filter is not strictly necessary, but it does prevent many unnecessary cache calls
+                                        final Mono<Void> onEvent = channel.getClient().getEventDispatcher().on(VoiceStateUpdateEvent.class)
+                                                .filter(agEvent -> agEvent.getOld().flatMap(VoiceState::getChannelId).map(channel.getId()::equals).orElse(false))
+                                                .filterWhen(ignored -> voiceStateCounter)
+                                                .next()
+                                                .then();
 
-                                            // Disconnect the bot if either onDelay or onEvent are completed!
-                                            return Mono.first(onDelay, onEvent)
-                                                    .doOnNext(test -> {
-                                                        // Send the message that we're leaving
-                                                        message.getChannel().flatMap(textChannel -> {
-                                                                    return textChannel.createMessage(
-                                                                            "Goodbye!"
-                                                                    );
-                                                                })
-                                                                .subscribe();
-                                                        audioManager.getPlayer().destroy();
-                                                        connection.disconnect();
-                                                    }).then();
+                                        // Disconnect the bot if either onDelay or onEvent are completed!
+                                        return Mono.first(onDelay, onEvent).
+                                                doOnSuccess(test -> audioManager.getPlayer().destroy())
+                                                .then(connection.disconnect());
+                                                /*
+                                                .doOnNext(test -> {
+                                                    // Send the message that we're leaving
+                                                    message.getChannel().flatMap(textChannel -> {
+                                                                return textChannel.createMessage(
+                                                                        "Goodbye!"
+                                                                );
+                                                            })
+                                                            .subscribe();
+                                                    audioManager.getPlayer().destroy();
+                                                    connection.disconnect();
+                                                }).then(); */
                                     });
                         })
                         .subscribe();
@@ -327,11 +330,6 @@ public class botDriver {
                                 // Create a duration to convert to seconds properly for string formatting
                                 Duration currDurr = Duration.ofMillis(currTrack.getPosition());
                                 long currSTimeSeconds = currDurr.getSeconds();
-                                /*
-                                String currSTime = String.format("%02d:%02d:%02d",
-                                        currSTimeSeconds / 3600, // Hours
-                                        (currSTimeSeconds % 3600) / 60 , // Minutes
-                                        (currSTimeSeconds % 60)); // Seconds */
                                 String currSTime = formatTime(currSTimeSeconds);
 
                                 nowPlaying = "Now playing: `" +
@@ -603,7 +601,7 @@ public class botDriver {
                     .flatMap(event -> Mono.just(event.getMessage().getContent())
                             .flatMap(content -> Flux.fromIterable(commands.entrySet())
                                     // We will be using ! as our "prefix" to any command in the system.
-                                    .filter(entry -> content.startsWith('!' + entry.getKey()))
+                                    .filter(entry -> content.toLowerCase().startsWith('!' + entry.getKey()))
                                     .flatMap(entry -> entry.getValue().execute(event))
                                     .next()))
                     .subscribe();
@@ -618,34 +616,6 @@ public class botDriver {
             System.out.println(e.getMessage());
         }
 
-
-        // After a certain delay, disconnect from a channel you're connected to.
-
-
-
-    /* Old Code
-        client.getEventDispatcher().on(TypingStartEvent.class)
-                .flatMap(event -> Mono.just(event.get())
-                        .doOnNext(author -> {
-                            Snowflake guildID = author.get();
-                            GuildAudioManager audioManager = GuildAudioManager.of(guildID);
-                            author.getVoiceState()
-                                    .flatMap(VoiceState::getChannel)
-                                    .doOnNext(vc -> {
-                                        System.out.println("Inside of the do on next for auto disconnect!");
-                                        if (audioManager.getPlayer().getPlayingTrack() == null){
-                                            if (System.currentTimeMillis() - audioManager.getIdleTime() >= 180000){
-                                                vc.sendDisconnectVoiceState();
-                                            }
-                                        }
-                                        else {
-                                            audioManager.setIdleTime(System.currentTimeMillis());
-                                        }
-
-                                    });
-                        })
-
-                ).subscribe(); */
 
 
 
