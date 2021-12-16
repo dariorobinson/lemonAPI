@@ -158,7 +158,7 @@ public class botDriver {
 
         // PLAY
         // Constructs a command to play a given song
-        commands.put("play", event -> Mono.justOrEmpty(event.getMessage())
+        commands.put("play ", event -> Mono.justOrEmpty(event.getMessage())
                 .doOnNext(command -> {
                     try {
                         // Get the url from the second line provided in the command
@@ -399,7 +399,7 @@ public class botDriver {
 
         // SEEK
         // Sets the currently playing song's time to a user given value
-        commands.put("seek", event -> Mono.justOrEmpty(event.getMessage())
+        commands.put("seek ", event -> Mono.justOrEmpty(event.getMessage())
                 .doOnNext(message -> {
                     // Get the guild ID
                     Snowflake guildID = message.getGuildId().orElseThrow(RuntimeException::new);
@@ -532,7 +532,7 @@ public class botDriver {
 
         // REMOVE
         // Removes an item from the queue at a given address
-        commands.put("remove", event -> Mono.justOrEmpty(event.getMessage())
+        commands.put("remove ", event -> Mono.justOrEmpty(event.getMessage())
                 .doOnNext(message -> {
                     // Create our initial return string
                     String returnMessage = "";
@@ -573,16 +573,68 @@ public class botDriver {
                 })
                 .then());
 
+        // SHUFFLE
+        // Shuffles the order of the queue
+        commands.put("shuffle", event-> Mono.justOrEmpty(event.getMessage())
+                .doOnNext(message -> {
+                    // Initial return message
+                    String returnMessage = "";
+
+                    // Get the guild ID
+                    Snowflake guildID = message.getGuildId().orElseThrow(RuntimeException::new);
+
+                    // Grab the audio manager
+                    GuildAudioManager guildAudio = GuildAudioManager.of(guildID);
+
+                    try {
+                        // Grab the queue
+                        List<AudioTrack> oldQueue = new LinkedList(guildAudio.getScheduler().queue);
+
+                        // Get the target size for the new queue
+                        Integer remainingSongs = oldQueue.size();
+
+                        // Shuffle the song order
+                        for (int i = remainingSongs; i > 0; i--) {
+                            // pick a random target
+                            int randTargetNum = (int)Math.floor(Math.random()*(i)+0) ;
+
+                            returnMessage = returnMessage + randTargetNum;
+                            AudioTrack target = oldQueue.remove(randTargetNum);
+                            returnMessage = returnMessage + target.getInfo().title + "\n";
+
+                            // Remove it from the old list
+                            guildAudio.getScheduler().queue.remove(target);
+
+                            // Re add it in the new order
+                            guildAudio.getScheduler().queue.add(target);
+                        }
+                        returnMessage = "Successfully shuffled the queue!";
+                        if(remainingSongs == 0) returnMessage = "There's nothing to shuffle...";
+                    } catch (Exception e) {
+                        returnMessage = returnMessage + e.getMessage();
+                        System.out.println("===============ERROR=================\n" + returnMessage);
+                        returnMessage = "Could not shuffle the queue...";
+                    }
+
+                    // Send our result over discord
+                    String finalMessage = returnMessage;
+                    message.getChannel().flatMap(channel -> {
+                        return channel.createMessage(finalMessage);
+                    }).subscribe();
+
+                }
+        ).then());
+
         // PLAYLIST
         // TODO: Implement me
         // Takes the users snowflake and matches it to one in our database
         // Then searches for playlists available to them and loads that playlist into our bot
         commands.put("playlist", event -> Mono.justOrEmpty(event.getMessage())
                 .doOnNext(message -> {
-                    String output = "Sorry, I'm not ready to be used yet!";
+                    String output = "Sorry, playlist isn't ready to be used yet!";
 
                     String finalOutput = output;
-                    message.getChannel().flatMap(channel -> channel.createMessage(finalOutput));
+                    message.getChannel().flatMap(channel -> channel.createMessage(finalOutput)).subscribe();
                 })
                 .then());
 
