@@ -1,5 +1,7 @@
 package com.revature.lemon.playlist;
 
+import com.revature.lemon.common.util.AccessType;
+import com.revature.lemon.common.util.RoleType;
 import com.revature.lemon.playlist.dtos.requests.NewPlaylistRequest;
 import com.revature.lemon.userplaylist.UserPlaylist;
 import com.revature.lemon.common.model.SongPlaylist;
@@ -24,11 +26,12 @@ public class Playlist {
     @Column()
     private String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "varchar DEFAULT 'PRIVATE' CHECK (access in ('PRIVATE', 'PUBLIC'))")
-    private String access;
+    private AccessType access;
 
     //CascadeType is used to let hibernate know that it needs to persist/remove/merge etc. cascaded tables when playlist table gets updated
-    @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserPlaylist> userRoleList;
 
     @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -69,11 +72,11 @@ public class Playlist {
         this.description = description;
     }
 
-    public String getAccess() {
+    public AccessType getAccess() {
         return access;
     }
 
-    public void setAccess(String access) {
+    public void setAccess(AccessType access) {
         this.access = access;
     }
 
@@ -103,7 +106,18 @@ public class Playlist {
         UserPlaylist newUser = new UserPlaylist(user, this);
         List<UserPlaylist> newPlaylistRole = new ArrayList<>();
         setUserRoleList(newPlaylistRole);
-        newUser.setUserRole("CREATOR");
+        newUser.setUserRole(RoleType.CREATOR);
+        userRoleList.add(newUser);
+    }
+
+    /**
+     * Add user into the current list of users
+     * @param user is the user to be granted access to playlist
+     * @param role is the role to be granted to user
+     */
+    public void addUser(User user, RoleType role) {
+        UserPlaylist newUser = new UserPlaylist(user, this);
+        newUser.setUserRole(role);
         userRoleList.add(newUser);
     }
 
@@ -112,7 +126,7 @@ public class Playlist {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Playlist playlist = (Playlist) o;
-        return Objects.equals(id, playlist.id) && Objects.equals(name, playlist.name) && Objects.equals(description, playlist.description) && Objects.equals(access, playlist.access) && Objects.equals(userRoleList, playlist.userRoleList) && Objects.equals(songOrderList, playlist.songOrderList);
+        return Objects.equals(id, playlist.id) && Objects.equals(name, playlist.name) && Objects.equals(description, playlist.description) && access == playlist.access && Objects.equals(userRoleList, playlist.userRoleList) && Objects.equals(songOrderList, playlist.songOrderList);
     }
 
     @Override

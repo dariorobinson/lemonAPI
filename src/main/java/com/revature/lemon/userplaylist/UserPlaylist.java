@@ -1,5 +1,6 @@
 package com.revature.lemon.userplaylist;
 
+import com.revature.lemon.common.util.RoleType;
 import com.revature.lemon.playlist.Playlist;
 import com.revature.lemon.user.User;
 
@@ -22,8 +23,9 @@ public class UserPlaylist {
     @JoinColumn(name = "playlist_id")
     private Playlist playlist;
 
+    @Enumerated(EnumType.STRING)
     @Column()
-    private String userRole;
+    private RoleType userRole;
 
     public UserPlaylist() {
     }
@@ -50,11 +52,11 @@ public class UserPlaylist {
         this.playlist = playlist;
     }
 
-    public String getUserRole() {
+    public RoleType getUserRole() {
         return userRole;
     }
 
-    public void setUserRole(String userRole) {
+    public void setUserRole(RoleType userRole) {
         this.userRole = userRole;
     }
 

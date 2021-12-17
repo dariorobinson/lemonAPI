@@ -14,6 +14,12 @@ public class SongService {
         this.songRepository = songRepository;
     }
 
+    /**
+     * Adds a song to the database
+     * Must first be used before a playlist can add a song to its playlist.
+     * @param newSong is the song to be added
+     * @return the song that was attempted to or got added
+     */
     public Song addSong(NewSongRequest newSong) {
 
         Song song = songRepository.findById(newSong.getUrl()).orElse(null);

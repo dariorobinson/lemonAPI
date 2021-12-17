@@ -1,10 +1,12 @@
 package com.revature.lemon.user.dtos;
 
+/**
+ * DTO used for authentication of user in login
+ */
 public class LoginRequest {
     private String id;
     private String username;
     private String discriminator;
-
 
     public LoginRequest(String id, String username, String discriminator){
         this.id=id;

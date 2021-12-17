@@ -1,8 +1,12 @@
 package com.revature.lemon.playlist.dtos.requests;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.revature.lemon.common.util.AccessType;
 import com.revature.lemon.user.User;
 
+/**
+ * DTO used to create a new playlist
+ */
 public class NewPlaylistRequest {
 
     @JsonIgnore
@@ -10,7 +14,7 @@ public class NewPlaylistRequest {
 
     private String name;
     private String description;
-    private String access;
+    private AccessType access;
 
     public User getCreator() {
         return creator;
@@ -36,11 +40,11 @@ public class NewPlaylistRequest {
         this.description = description;
     }
 
-    public String getAccess() {
+    public AccessType getAccess() {
         return access;
     }
 
-    public void setAccess(String access) {
+    public void setAccess(AccessType access) {
         this.access = access;
     }
 }

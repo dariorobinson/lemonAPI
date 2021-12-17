@@ -22,10 +22,13 @@ public class User {
     @Column(nullable = false)
     private String discriminator;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
     private List<UserPlaylist> playlistRole;
 
-    public User() {super();}
+    public User() {
+        super();
+    }
+
     public User(String id, String username, String discriminator){
         this.id=id;
         this.username=username;

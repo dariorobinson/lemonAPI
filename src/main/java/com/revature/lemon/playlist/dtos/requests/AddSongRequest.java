@@ -1,14 +1,19 @@
 package com.revature.lemon.playlist.dtos.requests;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.revature.lemon.song.Song;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * DTO used to add songs into a playlist
+ */
 public class AddSongRequest {
 
+    @JsonIgnore
     private String playlistId;
+
     private List<Song> songList;
 
     public String getPlaylistId() {

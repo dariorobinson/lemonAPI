@@ -3,6 +3,9 @@ package com.revature.lemon.song.dtos;
 import java.time.Duration;
 import java.util.Objects;
 
+/**
+ * DTO used for adding a new song in the database
+ */
 public class NewSongRequest {
     private String url;
     private String name;
