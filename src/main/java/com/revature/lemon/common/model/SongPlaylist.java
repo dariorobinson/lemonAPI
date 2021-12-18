@@ -61,6 +61,10 @@ public class SongPlaylist {
         this.songOrder = songOrder;
     }
 
+    public int getSongOrder() {
+        return songOrder;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -1,7 +1,6 @@
 package com.revature.lemon.playlist.dtos.requests;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.revature.lemon.song.Song;
 
 import java.util.List;
 import java.util.Objects;
@@ -14,7 +13,7 @@ public class AddSongRequest {
     @JsonIgnore
     private String playlistId;
 
-    private List<Song> songList;
+    private List<String> songList;
 
     public String getPlaylistId() {
         return playlistId;
@@ -24,11 +23,11 @@ public class AddSongRequest {
         this.playlistId = playlistId;
     }
 
-    public List<Song> getSongList() {
+    public List<String> getSongList() {
         return songList;
     }
 
-    public void setSongList(List<Song> songList) {
+    public void setSongList(List<String> songList) {
         this.songList = songList;
     }
 

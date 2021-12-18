@@ -48,6 +48,14 @@ public class UserPlaylist {
         this.user = user;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public Playlist getPlaylist() {
+        return playlist;
+    }
+
     public void setPlaylist(Playlist playlist) {
         this.playlist = playlist;
     }
@@ -75,8 +83,10 @@ public class UserPlaylist {
 
     @Override
     public String toString() {
-        return "UserPlaylistRole{" +
+        return "UserPlaylist{" +
                 "id=" + id +
+                ", user=" + user +
+                ", userRole=" + userRole +
                 '}';
     }
 }

@@ -1,23 +1,19 @@
 package com.revature.lemon.playlist.dtos.requests;
 
-import com.revature.lemon.common.util.RoleType;
-
 import java.util.Objects;
 
 /**
- * DTO used to grant user access to a playlist
+ * DTO used to remove user access from a playlist
  */
-public class AddUserRequest {
+public class RemoveUserRequest {
 
     private String username;
 
     private String discriminator;
 
-    private RoleType userRole;
-
     //private String playlistId; suggestion for if we use this in the UserController class instead
 
-    public AddUserRequest() {
+    public RemoveUserRequest() {
 
     }
 
@@ -37,33 +33,24 @@ public class AddUserRequest {
         this.discriminator = discriminator;
     }
 
-    public RoleType getUserRole() {
-        return userRole;
-    }
-
-    public void setUserRole(RoleType userRole) {
-        this.userRole = userRole;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AddUserRequest that = (AddUserRequest) o;
-        return Objects.equals(username, that.username) && Objects.equals(discriminator, that.discriminator) && userRole == that.userRole;
+        RemoveUserRequest that = (RemoveUserRequest) o;
+        return Objects.equals(username, that.username) && Objects.equals(discriminator, that.discriminator);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(username, discriminator, userRole);
+        return Objects.hash(username, discriminator);
     }
 
     @Override
     public String toString() {
-        return "AddUserRequest{" +
+        return "RemoveUserRequest{" +
                 "username='" + username + '\'' +
                 ", discriminator='" + discriminator + '\'' +
-                ", userRole='" + userRole + '\'' +
                 '}';
     }
 }

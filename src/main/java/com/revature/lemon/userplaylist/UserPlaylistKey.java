@@ -51,4 +51,12 @@ public class UserPlaylistKey implements Serializable {
     public int hashCode() {
         return Objects.hash(userId, playlistId);
     }
+
+    @Override
+    public String toString() {
+        return "UserPlaylistKey{" +
+                "userId='" + userId + '\'' +
+                ", playlistId='" + playlistId + '\'' +
+                '}';
+    }
 }

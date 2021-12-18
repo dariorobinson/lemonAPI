@@ -1,42 +1,32 @@
-package com.revature.lemon.user;
+package com.revature.lemon.playlist.dtos.responses;
 
+import com.revature.lemon.common.util.RoleType;
+import com.revature.lemon.user.User;
 import com.revature.lemon.userplaylist.UserPlaylist;
 
-import javax.persistence.*;
-import java.util.List;
 import java.util.Objects;
 
-@Entity
-@Table(name = "users", uniqueConstraints = {
-    @UniqueConstraint(name = "unique_user_discriminator", columnNames = {"username", "discriminator"})
-})
-public class User {
+/**
+ * DTO used for a response with user information in a playlist
+ */
+public class UsersInPlaylistResponse {
 
-    @Id
-    @Column(name = "user_id")
+    //might not need id to be sent to UI, because where do we store it? we don't want to show it
     private String id;
 
-    @Column(nullable = false, columnDefinition = "VARCHAR CHECK (username <> '')")
     private String username;
 
-    @Column(nullable = false)
     private String discriminator;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
-    private List<UserPlaylist> playlistRole;
+    private RoleType userRole;
 
-    public User() {
-        super();
+    public UsersInPlaylistResponse() {
+
     }
 
-    public User(String id, String username, String discriminator){
-        this.id=id;
-        this.username=username;
-        this.discriminator=discriminator;
-    }
-
-    public User(UserPlaylist users) {
+    public UsersInPlaylistResponse(UserPlaylist users) {
         User user = users.getUser();
+        this.userRole = users.getUserRole();
         this.id = user.getId();
         this.username = user.getUsername();
         this.discriminator = user.getDiscriminator();
@@ -66,33 +56,34 @@ public class User {
         this.discriminator = discriminator;
     }
 
-    public List<UserPlaylist> getPlaylistRole() {
-        return playlistRole;
+    public RoleType getUserRole() {
+        return userRole;
     }
 
-    public void setPlaylistRole(List<UserPlaylist> playlistRole) {
-        this.playlistRole = playlistRole;
+    public void setUserRole(RoleType userRole) {
+        this.userRole = userRole;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return Objects.equals(id, user.id) && Objects.equals(username, user.username) && Objects.equals(discriminator, user.discriminator);
+        UsersInPlaylistResponse that = (UsersInPlaylistResponse) o;
+        return Objects.equals(id, that.id) && Objects.equals(username, that.username) && Objects.equals(discriminator, that.discriminator) && userRole == that.userRole;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, username, discriminator, playlistRole);
+        return Objects.hash(id, username, discriminator, userRole);
     }
 
     @Override
     public String toString() {
-        return "User{" +
+        return "UsersInPlaylistResponse{" +
                 "id='" + id + '\'' +
                 ", username='" + username + '\'' +
                 ", discriminator='" + discriminator + '\'' +
+                ", userRole=" + userRole +
                 '}';
     }
 }

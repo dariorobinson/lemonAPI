@@ -80,12 +80,12 @@ public class Playlist {
         this.access = access;
     }
 
-    public List<UserPlaylist> getPlayListRole() {
-        return userRoleList;
-    }
-
     public void setUserRoleList(List<UserPlaylist> userRoleList) {
         this.userRoleList = userRoleList;
+    }
+
+    public List<UserPlaylist> getUserRoleList() {
+        return userRoleList;
     }
 
     public List<SongPlaylist> getSongOrderList() {
@@ -119,6 +119,10 @@ public class Playlist {
         UserPlaylist newUser = new UserPlaylist(user, this);
         newUser.setUserRole(role);
         userRoleList.add(newUser);
+    }
+
+    public void removeUser(UserPlaylist user) {
+        userRoleList.remove(user);
     }
 
     @Override
