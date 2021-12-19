@@ -73,21 +73,22 @@ public class SecurityAspect {
         //String playlistId = annotation.playlistId();
 
         //Iterate through the user's playlists and check to see if any of their playlists match the id of current playlist, then check if they are creator or not
-        List<UserPlaylist> list = requester.getPlaylistRole();;
-        System.out.println(list.size());
-        for(int i=0; i<list.size(); i++) {
-            System.out.println("Looking for playlists");
-            UserPlaylist playlist = list.get(i);
-            System.out.println("playlist = " + playlist.getId().getPlaylistId());
-            System.out.println("finding: " + playlistId);
-            String playlistKeyId = playlist.getId().getPlaylistId();
-            if(playlistKeyId.equals(playlistId)) {
-                System.out.println("Found playlist");
-                for(RoleType role : allowedRoles) {
-                    System.out.println("Roles " + role);
-                    if(requester.getPlaylistRole().get(i).getUserRole().equals(role)) {
-                        logger.info("User has role: ${} and is authorized to do this action", role);
-                        return;
+        List<UserPlaylist> list = requester.getPlaylistRole();
+        if(list != null) {
+            for (int i = 0; i < list.size(); i++) {
+                System.out.println("Looking for playlists");
+                UserPlaylist playlist = list.get(i);
+                System.out.println("playlist = " + playlist.getId().getPlaylistId());
+                System.out.println("finding: " + playlistId);
+                String playlistKeyId = playlist.getId().getPlaylistId();
+                if (playlistKeyId.equals(playlistId)) {
+                    System.out.println("Found playlist");
+                    for (RoleType role : allowedRoles) {
+                        System.out.println("Roles " + role);
+                        if (requester.getPlaylistRole().get(i).getUserRole().equals(role)) {
+                            logger.info("User has role: ${} and is authorized to do this action", role);
+                            return;
+                        }
                     }
                 }
             }
