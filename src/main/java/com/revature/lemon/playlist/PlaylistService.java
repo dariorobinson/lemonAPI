@@ -129,6 +129,25 @@ public class PlaylistService {
     }
 
     /**
+     * Edit role of user that has access to playlist
+     * @param playlistId is the id of the current playlist
+     * @param updateUser contains the username, discriminator, and new user role of the user to be updated
+     */
+    public void editUserRoleInPlaylist(String playlistId, AddUserRequest updateUser) {
+        Playlist playlist = playlistRepository.findById(playlistId)
+                .orElseThrow(PlaylistNotFoundException::new);
+
+        playlist.getUserRoleList()
+                .stream()
+                .filter(e -> e.getUser().getUsername().equals(updateUser.getUsername()))
+                .filter(e -> e.getUser().getDiscriminator().equals(updateUser.getDiscriminator()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("User did not have any roles in this playlist"))
+                .setUserRole(updateUser.getUserRole());
+        playlistRepository.save(playlist);
+    }
+
+    /**
      * Looks through the playlist's UserPlaylist and checks to see if any of those contain the given username and discriminator
      * @param playlistId the id of the playlist we are currently looking at
      * @param userRequest contains the username and discriminator of the user to be removed from the playlist
@@ -139,11 +158,11 @@ public class PlaylistService {
                 .orElseThrow(PlaylistNotFoundException::new);
 
         UserPlaylist userPlaylist = playlist.getUserRoleList()
-                .stream()
-                .filter(e -> e.getUser().getUsername().equals(userRequest.getUsername()))
-                .filter(e -> e.getUser().getDiscriminator().equals(userRequest.getDiscriminator()))
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("User did not have any roles in this playlist"));
+                                            .stream()
+                                            .filter(e -> e.getUser().getUsername().equals(userRequest.getUsername()))
+                                            .filter(e -> e.getUser().getDiscriminator().equals(userRequest.getDiscriminator()))
+                                            .findFirst()
+                                            .orElseThrow(() -> new ResourceNotFoundException("User did not have any roles in this playlist"));
 
         playlist.removeUser(userPlaylist);
         playlistRepository.save(playlist);

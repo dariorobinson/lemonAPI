@@ -52,7 +52,7 @@ public class PlaylistController {
     //put in a username and discriminator, UserPlaylistRole should be getting updated
     @ResponseStatus(HttpStatus.OK)
     @PatchMapping(value = "/{playlistId}/adduser", consumes = "application/json", produces = "application/json")
-    //todo secured annotation and get user id from username + discriminator
+    //todo @Secured(allowedAccountTypes = {RoleType.CREATOR}, playlistId = "???") for addUserToPlaylist and get user id from username + discriminator in service class
     public PlaylistResponse addUserToPlaylist(@PathVariable String playlistId, @RequestBody AddUserRequest newUser) {
 
         playlistService.addUserToPlaylist(playlistId, newUser);
@@ -66,6 +66,14 @@ public class PlaylistController {
 
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PatchMapping(value = "/{playlistId}/edituser")
+    //todo @Secured(allowedAccountTypes = {RoleType.CREATOR}, playlistId = "???") for editUserRole
+    public void editUserRole(@PathVariable String playlistId, @RequestBody AddUserRequest updateUser) {
+
+        playlistService.editUserRoleInPlaylist(playlistId, updateUser);
+    }
+
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/{playlistId}/getusers")
     public List<UsersInPlaylistResponse> getUsersWithRoles(@PathVariable String playlistId) {
@@ -76,7 +84,7 @@ public class PlaylistController {
     //incomplete with security aspect DOES NOT WORK, find way to get PathVariable to annotation
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping(value = "/{playlistId}")
-    @Secured(allowedAccountTypes = {RoleType.CREATOR}, playlistId = "args(playlistId)")
+    //todo @Secured(allowedAccountTypes = {RoleType.CREATOR}, playlistId = "args(playlistId)") for deletePlaylist
     public void deletePlaylist(@PathVariable String playlistId) {
 
         playlistService.deletePlaylist(playlistId);
