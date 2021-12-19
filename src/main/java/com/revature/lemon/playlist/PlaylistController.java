@@ -85,6 +85,7 @@ public class PlaylistController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/{playlistId}/getusers")
+    @Authenticated
     public List<UsersInPlaylistResponse> getUsersWithRoles(@PathVariable String playlistId) {
 
         return playlistService.getUsersWithPlaylistAccess(playlistId);
@@ -92,6 +93,7 @@ public class PlaylistController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/{playlistId}/getsongs", produces = "application/json")
+    @Authenticated
     public List<SongsInPlaylistResponse> getSongsInPlaylist(@PathVariable String playlistId) {
 
         return playlistService.getSongsInPlaylist(playlistId);
@@ -99,6 +101,7 @@ public class PlaylistController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/private", produces = "application/json")
+    @Authenticated
     public List<PlaylistResponse> getPrivatePlaylists(HttpSession session) {
 
         User user = (User) session.getAttribute("authUser");
@@ -107,6 +110,7 @@ public class PlaylistController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/public", produces = "application/json")
+    @Authenticated
     public List<PlaylistResponse> getPublicPlaylists() {
 
         return playlistService.getPublicPlaylists();

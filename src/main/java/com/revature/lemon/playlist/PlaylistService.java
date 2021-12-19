@@ -28,12 +28,12 @@ import java.util.stream.Collectors;
 public class PlaylistService {
 
     private final PlaylistRepository playlistRepository;
-    private final UserRepository userRepository;    //todo remove
+    private final UserRepository userRepository;
 
     @Autowired
     public PlaylistService (PlaylistRepository playlistRepository, UserRepository userRepository) {
         this.playlistRepository = playlistRepository;
-        this.userRepository = userRepository;   //todo remove
+        this.userRepository = userRepository;
     }
 
     /**
@@ -108,29 +108,15 @@ public class PlaylistService {
 
     /**
      * Uses the given username and discriminator to get the id then remove that
-     * @param playlistId
-     * @param newUser
-     * todo get userId from the given username and discriminator
+     * @param playlistId the id of the current playlist
+     * @param newUser contains new user's username, discriminator, and granted role
      */
     public void addUserToPlaylist(String playlistId, AddUserRequest newUser) {
 
         Playlist playlist = playlistRepository.findById(playlistId)
                                               .orElseThrow(PlaylistNotFoundException::new);
 
-        /**
-         * Request a new user to be added
-         * We have the username and discriminator ONLY
-         * so we have to get the ID from the userRepository
-         */
-        //User user = new User();
-        //user.setUsername(newUser.getUsername());
-        //user.setDiscriminator(newUser.getDiscriminator());
-        //only really need the ID, should use username and discriminator to find the id
-        //user.setId("1234");
-        System.out.println(newUser.getUsername());
-        System.out.println(newUser.getDiscriminator());
-        User user = userRepository.findUserByUsernameAndDiscriminator(newUser.getUsername(), newUser.getDiscriminator());   //todo remove
-        System.out.println(user);
+        User user = userRepository.findUserByUsernameAndDiscriminator(newUser.getUsername(), newUser.getDiscriminator());
 
         playlist.addUser(user, newUser.getUserRole());
         playlistRepository.save(playlist);
