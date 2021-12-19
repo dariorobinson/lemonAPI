@@ -1,5 +1,6 @@
 package com.revature.lemon.user;
 
+import com.revature.lemon.common.exceptions.ResourceNotFoundException;
 import com.revature.lemon.user.dtos.LoginRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,9 +32,10 @@ public class UserService {
     public User login(LoginRequest loginRequest){
 //        System.out.println(loginRequest.toString());
         //check if user exists, return null for yes
-        if (userRepository.findUserById(loginRequest.getId()).isPresent()){
+        if (userRepository.findById(loginRequest.getId()).isPresent()){
             logger.warn("User was found in the database");
-            return userRepository.findUserById(loginRequest.getId()).orElseThrow(RuntimeException::new);
+            return userRepository.findById(loginRequest.getId())
+                                 .orElseThrow(Error::new);
         }
         else {//if the database doesn't have this user, save the new user info;
             logger.warn("User was not found in database, authenticating with Autho2");

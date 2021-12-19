@@ -14,6 +14,4 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Secured {
     RoleType[] allowedAccountTypes();
-
-    String playlistId();
 }

@@ -19,6 +19,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpSession;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -50,22 +51,30 @@ public class SecurityAspect {
 
     /**
      * For methods with the @Secured annotation, check if the current user has the correct role to access method
+     * todo leave all the print statements for testing later, still haven't tested if it works for editors and viewers
      * @param jp
      */
     @Before("@annotation(com.revature.lemon.common.util.web.Secured)")
     public void requireCreator(JoinPoint jp) {
+        String playlistId = "";
+        List<Parameter> parameters = Arrays.asList(((MethodSignature) jp.getSignature()).getMethod().getParameters());
+        for(int i=0; i<parameters.size(); i++) {
+            if(parameters.get(i).getName().equals("playlistId")) {
+                playlistId = jp.getArgs()[i].toString();
+            }
+        }
+        System.out.println(playlistId);
 
         Secured annotation = getAnnotationFromJoinPoint(jp, Secured.class);
         List<RoleType> allowedRoles = Arrays.asList(annotation.allowedAccountTypes());
 
         HttpSession session = getCurrentSessionIfExist().orElseThrow(() -> new AuthenticationException("No session found."));
         User requester = ((User) session.getAttribute("authUser"));
-        String playlistId = annotation.playlistId();
+        //String playlistId = annotation.playlistId();
 
         //Iterate through the user's playlists and check to see if any of their playlists match the id of current playlist, then check if they are creator or not
         List<UserPlaylist> list = requester.getPlaylistRole();;
         System.out.println(list.size());
-        System.out.println("id is: " + annotation.playlistId());
         for(int i=0; i<list.size(); i++) {
             System.out.println("Looking for playlists");
             UserPlaylist playlist = list.get(i);

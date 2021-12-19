@@ -9,8 +9,12 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends CrudRepository<User, String> {
 
-    Optional<User> findUserById(String id);
+    //??? discuss with Qi
+    //Optional<User> findUserById(String id);
 
-    @Override
-    <S extends User> S save(S entity);
+    //???? discuss with Qi
+    //@Override
+    //<S extends User> S save(S entity);
+
+    User findUserByUsernameAndDiscriminator(String username, String discriminator);
 }

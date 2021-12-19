@@ -41,7 +41,7 @@ public class PlaylistController {
 
     @PatchMapping(value = "/{playlistId}/addsong", consumes = "application/json")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Authenticated //Change to new annotation. Having to do with the user role.
+    @Secured(allowedAccountTypes = {RoleType.CREATOR, RoleType.EDITOR}) //Change to new annotation. Having to do with the user role.
     public void editSongsInPlaylist(@PathVariable String playlistId, @RequestBody AddSongRequest newSongRequest) {
 
         newSongRequest.setPlaylistId(playlistId);
@@ -52,7 +52,7 @@ public class PlaylistController {
     //put in a username and discriminator, UserPlaylistRole should be getting updated
     @ResponseStatus(HttpStatus.OK)
     @PatchMapping(value = "/{playlistId}/adduser", consumes = "application/json", produces = "application/json")
-    //todo @Secured(allowedAccountTypes = {RoleType.CREATOR}, playlistId = "???") for addUserToPlaylist and get user id from username + discriminator in service class
+    @Secured(allowedAccountTypes = {RoleType.CREATOR}) // get user id from username + discriminator in service class
     public PlaylistResponse addUserToPlaylist(@PathVariable String playlistId, @RequestBody AddUserRequest newUser) {
 
         playlistService.addUserToPlaylist(playlistId, newUser);
@@ -61,6 +61,7 @@ public class PlaylistController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping(value = "/{playlistId}/removeuser", consumes = "application/json")
+    @Secured(allowedAccountTypes = {RoleType.CREATOR})
     public void removeUserFromPlaylist(@PathVariable String playlistId, @RequestBody RemoveUserRequest userRequest) {
         playlistService.removeUserFromPlaylist(playlistId, userRequest);
 
@@ -68,10 +69,18 @@ public class PlaylistController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping(value = "/{playlistId}/edituser")
-    //todo @Secured(allowedAccountTypes = {RoleType.CREATOR}, playlistId = "???") for editUserRole
+    @Secured(allowedAccountTypes = {RoleType.CREATOR})
     public void editUserRole(@PathVariable String playlistId, @RequestBody AddUserRequest updateUser) {
 
         playlistService.editUserRoleInPlaylist(playlistId, updateUser);
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping(value = "/{playlistId}")
+    @Secured(allowedAccountTypes = {RoleType.CREATOR})
+    public void deletePlaylist(@PathVariable String playlistId) {
+
+        playlistService.deletePlaylist(playlistId);
     }
 
     @ResponseStatus(HttpStatus.OK)
@@ -79,15 +88,6 @@ public class PlaylistController {
     public List<UsersInPlaylistResponse> getUsersWithRoles(@PathVariable String playlistId) {
 
         return playlistService.getUsersWithPlaylistAccess(playlistId);
-    }
-
-    //incomplete with security aspect DOES NOT WORK, find way to get PathVariable to annotation
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping(value = "/{playlistId}")
-    //todo @Secured(allowedAccountTypes = {RoleType.CREATOR}, playlistId = "args(playlistId)") for deletePlaylist
-    public void deletePlaylist(@PathVariable String playlistId) {
-
-        playlistService.deletePlaylist(playlistId);
     }
 
     @ResponseStatus(HttpStatus.OK)

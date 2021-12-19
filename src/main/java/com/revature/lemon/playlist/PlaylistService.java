@@ -13,6 +13,7 @@ import com.revature.lemon.playlist.dtos.responses.PlaylistResponse;
 import com.revature.lemon.playlist.dtos.responses.SongsInPlaylistResponse;
 import com.revature.lemon.playlist.dtos.responses.UsersInPlaylistResponse;
 import com.revature.lemon.user.User;
+import com.revature.lemon.user.UserRepository;
 import com.revature.lemon.userplaylist.UserPlaylist;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,10 +28,12 @@ import java.util.stream.Collectors;
 public class PlaylistService {
 
     private final PlaylistRepository playlistRepository;
+    private final UserRepository userRepository;    //todo remove
 
     @Autowired
-    public PlaylistService (PlaylistRepository playlistRepository) {
+    public PlaylistService (PlaylistRepository playlistRepository, UserRepository userRepository) {
         this.playlistRepository = playlistRepository;
+        this.userRepository = userRepository;   //todo remove
     }
 
     /**
@@ -107,6 +110,7 @@ public class PlaylistService {
      * Uses the given username and discriminator to get the id then remove that
      * @param playlistId
      * @param newUser
+     * todo get userId from the given username and discriminator
      */
     public void addUserToPlaylist(String playlistId, AddUserRequest newUser) {
 
@@ -118,11 +122,15 @@ public class PlaylistService {
          * We have the username and discriminator ONLY
          * so we have to get the ID from the userRepository
          */
-        User user = new User();
-        user.setUsername(newUser.getUsername());
-        user.setDiscriminator(newUser.getDiscriminator());
+        //User user = new User();
+        //user.setUsername(newUser.getUsername());
+        //user.setDiscriminator(newUser.getDiscriminator());
         //only really need the ID, should use username and discriminator to find the id
-        user.setId("1234");
+        //user.setId("1234");
+        System.out.println(newUser.getUsername());
+        System.out.println(newUser.getDiscriminator());
+        User user = userRepository.findUserByUsernameAndDiscriminator(newUser.getUsername(), newUser.getDiscriminator());   //todo remove
+        System.out.println(user);
 
         playlist.addUser(user, newUser.getUserRole());
         playlistRepository.save(playlist);
@@ -134,8 +142,9 @@ public class PlaylistService {
      * @param updateUser contains the username, discriminator, and new user role of the user to be updated
      */
     public void editUserRoleInPlaylist(String playlistId, AddUserRequest updateUser) {
+
         Playlist playlist = playlistRepository.findById(playlistId)
-                .orElseThrow(PlaylistNotFoundException::new);
+                                              .orElseThrow(PlaylistNotFoundException::new);
 
         playlist.getUserRoleList()
                 .stream()
@@ -155,7 +164,7 @@ public class PlaylistService {
     public void removeUserFromPlaylist(String playlistId, RemoveUserRequest userRequest) {
 
         Playlist playlist = playlistRepository.findById(playlistId)
-                .orElseThrow(PlaylistNotFoundException::new);
+                                              .orElseThrow(PlaylistNotFoundException::new);
 
         UserPlaylist userPlaylist = playlist.getUserRoleList()
                                             .stream()
