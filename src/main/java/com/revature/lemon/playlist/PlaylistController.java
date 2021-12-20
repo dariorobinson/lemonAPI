@@ -1,5 +1,6 @@
 package com.revature.lemon.playlist;
 
+import com.revature.lemon.auth.TokenService;
 import com.revature.lemon.common.util.RoleType;
 import com.revature.lemon.common.util.web.Authenticated;
 import com.revature.lemon.common.util.web.Secured;
@@ -11,10 +12,12 @@ import com.revature.lemon.playlist.dtos.responses.PlaylistResponse;
 import com.revature.lemon.playlist.dtos.responses.SongsInPlaylistResponse;
 import com.revature.lemon.playlist.dtos.responses.UsersInPlaylistResponse;
 import com.revature.lemon.user.User;
+import com.revature.lemon.user.dtos.LoginRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.util.List;
 
@@ -24,18 +27,21 @@ import java.util.List;
 public class PlaylistController {
 
     private final PlaylistService playlistService;
+    private final TokenService tokenService;
 
     @Autowired
-    public PlaylistController(PlaylistService playlistService) {
+    public PlaylistController(PlaylistService playlistService, TokenService tokenService) {
         this.playlistService = playlistService;
+        this.tokenService = tokenService;
     }
 
     @Authenticated
     @ResponseStatus(HttpStatus.CREATED)
-    //@PostMapping(consumes = "application/json", produces = "application/json")
-    public PlaylistResponse createPlaylist(@RequestBody NewPlaylistRequest playlist, HttpSession session) {
-
-        playlist.setCreator((User) session.getAttribute("authUser"));
+    @PostMapping(consumes = "application/json", produces = "application/json")
+    public PlaylistResponse createPlaylist(@RequestBody NewPlaylistRequest playlist, @RequestHeader("Authorization") String token) {
+        LoginRequest user = tokenService.extractTokenDetails(token);
+        User creator = new User(user.getId(), user.getUsername(), user.getDiscriminator());
+        playlist.setCreator(creator);
         return playlistService.createNewPlaylist(playlist);
     }
 

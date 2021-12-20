@@ -1,5 +1,7 @@
 package com.revature.lemon.user.dtos;
 
+import com.revature.lemon.user.User;
+
 /**
  * DTO used for authentication of user in login
  */
@@ -12,6 +14,12 @@ public class LoginRequest {
         this.id=id;
         this.username=username;
         this.discriminator=discriminator;
+    }
+
+    public LoginRequest(User user) {
+        this.id = user.getId();
+        this.username = user.getUsername();
+        this.discriminator = user.getDiscriminator();
     }
 
     @Override

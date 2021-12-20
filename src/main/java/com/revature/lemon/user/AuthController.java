@@ -1,11 +1,13 @@
 package com.revature.lemon.user;
 
 
+import com.revature.lemon.auth.TokenService;
 import com.revature.lemon.user.dtos.LoginRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 @CrossOrigin
@@ -14,18 +16,24 @@ import javax.servlet.http.HttpSession;
 public class AuthController {
 
     private final UserService userService;
+    private final TokenService tokenService;
 
     @Autowired
-    public AuthController(UserService userService) {
+    public AuthController(UserService userService, TokenService tokenService) {
         this.userService = userService;
+        this.tokenService = tokenService;
     }
 
     @PostMapping(consumes = "application/json")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void authenticate(@RequestBody LoginRequest loginRequest, HttpSession httpSession) {
+    public void authenticate(@RequestBody LoginRequest loginRequest, HttpServletResponse resp) {
         User authUser = userService.login(loginRequest);
-        httpSession.setAttribute("authUser", authUser);
-        System.out.println("authenticate user is " + httpSession.getAttribute("authUser"));
+        LoginRequest payload = new LoginRequest(authUser);
+        String token = tokenService.generateToken(payload);
+        System.out.println(token);
+        resp.setHeader("Authorization", token);
+        System.out.println(resp.getHeader("Authorization"));
+
     }
 
     @DeleteMapping

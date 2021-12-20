@@ -1,5 +1,6 @@
 package com.revature.lemon.common.util.aspects;
 
+import com.revature.lemon.auth.TokenService;
 import com.revature.lemon.common.exceptions.AuthenticationException;
 import com.revature.lemon.common.exceptions.AuthorizationException;
 import com.revature.lemon.common.util.RoleType;
@@ -29,6 +30,11 @@ import java.util.Optional;
 public class SecurityAspect {
 
     Logger logger = LogManager.getLogger();
+    TokenService tokenService;
+
+    public SecurityAspect(TokenService tokenService) {
+        this.tokenService = tokenService;
+    }
 
     /**
      * For methods with @Authenticated annotation, check if the user is logged in to access it.
@@ -36,17 +42,20 @@ public class SecurityAspect {
     @Order(1)
     @Before("@annotation(com.revature.lemon.common.util.web.Authenticated)")
     public void requireAuthentication() {
-        AuthenticationException e = new AuthenticationException("No current sesssion found");
-        HttpSession session = getCurrentSessionIfExist().orElseThrow(() -> e);
-        System.out.println("Session exists");
-        if(session.getAttribute("authUser") == null) throw e;
+        if(!sessionExists()) {
+            throw new AuthenticationException("No session token found");
+        }
     }
 
     /**
      * Helper method to get the current session
      */
-    private Optional<HttpSession> getCurrentSessionIfExist() {
-        return Optional.ofNullable(((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getSession(false));
+
+    private boolean sessionExists() {
+        String token = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getHeader("Authorization");
+        System.out.println(token);
+
+        return tokenService.isTokenValid(token);
     }
 
     /**
@@ -54,8 +63,12 @@ public class SecurityAspect {
      * todo leave all the print statements for testing later, still haven't tested if it works for editors and viewers
      * @param jp
      */
+    /*
     @Before("@annotation(com.revature.lemon.common.util.web.Secured)")
     public void requireCreator(JoinPoint jp) {
+        if(!sessionExists()) {
+            throw new AuthenticationException("No current session found");
+        }
         String playlistId = "";
         List<Parameter> parameters = Arrays.asList(((MethodSignature) jp.getSignature()).getMethod().getParameters());
         for(int i=0; i<parameters.size(); i++) {
@@ -68,7 +81,10 @@ public class SecurityAspect {
         Secured annotation = getAnnotationFromJoinPoint(jp, Secured.class);
         List<RoleType> allowedRoles = Arrays.asList(annotation.allowedAccountTypes());
 
-        HttpSession session = getCurrentSessionIfExist().orElseThrow(() -> new AuthenticationException("No session found."));
+        String token = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getHeader("Authorization");
+
+        //HttpSession session = getCurrentSessionIfExist().orElseThrow(() -> new AuthenticationException("No session found."));
+
         User requester = ((User) session.getAttribute("authUser"));
         //String playlistId = annotation.playlistId();
 
@@ -96,6 +112,7 @@ public class SecurityAspect {
         logger.warn("User is not authorized to do this action");
         throw new AuthorizationException("You are not authorized to do this");
     }
+    */
 
     private <T extends Annotation> T getAnnotationFromJoinPoint(JoinPoint jp, Class<T> annotationType) {
         return ((MethodSignature) jp.getSignature()).getMethod().getAnnotation(annotationType);
