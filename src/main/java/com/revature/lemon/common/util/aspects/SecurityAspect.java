@@ -38,7 +38,7 @@ public class SecurityAspect {
     public void requireAuthentication() {
         AuthenticationException e = new AuthenticationException("No current sesssion found");
         HttpSession session = getCurrentSessionIfExist().orElseThrow(() -> e);
-        System.out.println(session.getAttribute("authUser"));
+        System.out.println("Session exists");
         if(session.getAttribute("authUser") == null) throw e;
     }
 

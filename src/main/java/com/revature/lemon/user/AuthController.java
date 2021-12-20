@@ -25,6 +25,7 @@ public class AuthController {
     public void authenticate(@RequestBody LoginRequest loginRequest, HttpSession httpSession) {
         User authUser = userService.login(loginRequest);
         httpSession.setAttribute("authUser", authUser);
+        System.out.println("authenticate user is " + httpSession.getAttribute("authUser"));
     }
 
     @DeleteMapping

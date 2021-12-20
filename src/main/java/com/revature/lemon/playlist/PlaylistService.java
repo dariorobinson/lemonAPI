@@ -66,6 +66,7 @@ public class PlaylistService {
             songPlaylist.setId(new SongPlaylistKey(songList.get(i),playlist.getId()));
             songPlaylist.setSongOrder(i+1);
             newSongPlaylist.add(songPlaylist);
+            System.out.println(songPlaylist.getSongOrder());
         }
 
         playlist.setSongOrderList(newSongPlaylist);
@@ -170,7 +171,7 @@ public class PlaylistService {
      */
     public List<SongsInPlaylistResponse> getSongsInPlaylist(String playlistId) {
 
-        return playlistRepository.findById(playlistId)
+        return playlistRepository.findPlaylistByIdOrderBySongOrderListSongOrder(playlistId)
                                  .orElseThrow(PlaylistNotFoundException::new)
                                  .getSongOrderList()
                                  .stream()

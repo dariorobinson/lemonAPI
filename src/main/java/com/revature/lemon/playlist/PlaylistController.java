@@ -32,7 +32,7 @@ public class PlaylistController {
 
     @Authenticated
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping(consumes = "application/json", produces = "application/json")
+    //@PostMapping(consumes = "application/json", produces = "application/json")
     public PlaylistResponse createPlaylist(@RequestBody NewPlaylistRequest playlist, HttpSession session) {
 
         playlist.setCreator((User) session.getAttribute("authUser"));
@@ -41,7 +41,7 @@ public class PlaylistController {
 
     @PatchMapping(value = "/{playlistId}/addsong", consumes = "application/json")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Secured(allowedAccountTypes = {RoleType.CREATOR, RoleType.EDITOR}) //Change to new annotation. Having to do with the user role.
+    //@Secured(allowedAccountTypes = {RoleType.CREATOR, RoleType.EDITOR}) //Change to new annotation. Having to do with the user role.
     public void editSongsInPlaylist(@PathVariable String playlistId, @RequestBody AddSongRequest newSongRequest) {
 
         newSongRequest.setPlaylistId(playlistId);
@@ -52,7 +52,7 @@ public class PlaylistController {
     //put in a username and discriminator, UserPlaylistRole should be getting updated
     @ResponseStatus(HttpStatus.OK)
     @PatchMapping(value = "/{playlistId}/adduser", consumes = "application/json", produces = "application/json")
-    @Secured(allowedAccountTypes = {RoleType.CREATOR}) // get user id from username + discriminator in service class
+   // @Secured(allowedAccountTypes = {RoleType.CREATOR}) // get user id from username + discriminator in service class
     public PlaylistResponse addUserToPlaylist(@PathVariable String playlistId, @RequestBody AddUserRequest newUser) {
 
         playlistService.addUserToPlaylist(playlistId, newUser);
@@ -61,7 +61,7 @@ public class PlaylistController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping(value = "/{playlistId}/removeuser", consumes = "application/json")
-    @Secured(allowedAccountTypes = {RoleType.CREATOR})
+    //@Secured(allowedAccountTypes = {RoleType.CREATOR})
     public void removeUserFromPlaylist(@PathVariable String playlistId, @RequestBody RemoveUserRequest userRequest) {
         playlistService.removeUserFromPlaylist(playlistId, userRequest);
 
@@ -69,7 +69,7 @@ public class PlaylistController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping(value = "/{playlistId}/edituser")
-    @Secured(allowedAccountTypes = {RoleType.CREATOR})
+    //@Secured(allowedAccountTypes = {RoleType.CREATOR})
     public void editUserRole(@PathVariable String playlistId, @RequestBody AddUserRequest updateUser) {
 
         playlistService.editUserRoleInPlaylist(playlistId, updateUser);
@@ -77,7 +77,7 @@ public class PlaylistController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping(value = "/{playlistId}")
-    @Secured(allowedAccountTypes = {RoleType.CREATOR})
+    //@Secured(allowedAccountTypes = {RoleType.CREATOR})
     public void deletePlaylist(@PathVariable String playlistId) {
 
         playlistService.deletePlaylist(playlistId);
@@ -85,7 +85,7 @@ public class PlaylistController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/{playlistId}/getusers")
-    @Authenticated
+    //@Authenticated
     public List<UsersInPlaylistResponse> getUsersWithRoles(@PathVariable String playlistId) {
 
         return playlistService.getUsersWithPlaylistAccess(playlistId);
@@ -93,7 +93,7 @@ public class PlaylistController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/{playlistId}/getsongs", produces = "application/json")
-    @Authenticated
+    //@Authenticated
     public List<SongsInPlaylistResponse> getSongsInPlaylist(@PathVariable String playlistId) {
 
         return playlistService.getSongsInPlaylist(playlistId);
@@ -101,17 +101,20 @@ public class PlaylistController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/private", produces = "application/json")
-    @Authenticated
+   // @Authenticated
     public List<PlaylistResponse> getPrivatePlaylists(HttpSession session) {
 
         User user = (User) session.getAttribute("authUser");
         return playlistService.getPrivatePlaylists(user.getId());
     }
 
+    //@Authenticated
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/public", produces = "application/json")
-    @Authenticated
     public List<PlaylistResponse> getPublicPlaylists() {
+//        User user = (User) session.getAttribute("authUser");
+//        System.out.println("Authuser is: " + session.getAttribute("authUser"));
+//        System.out.println(user);
 
         return playlistService.getPublicPlaylists();
     }
