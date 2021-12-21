@@ -86,12 +86,8 @@ public class SecurityAspect {
         List<RoleType> allowedRoles = Arrays.asList(annotation.allowedAccountTypes());
 
         String token = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getHeader("Authorization");
-
-        //HttpSession session = getCurrentSessionIfExist().orElseThrow(() -> new AuthenticationException("No session found."));
-
         LoginRequest extractedUser = tokenService.extractTokenDetails(token);
         User user123 = userService.findUserById(extractedUser.getId());
-        //String playlistId = annotation.playlistId();
 
         //Iterate through the user's playlists and check to see if any of their playlists match the id of current playlist, then check if they are creator or not
         List<UserPlaylist> list = user123.getPlaylistRole();
