@@ -24,15 +24,17 @@ public class AuthController {
         this.tokenService = tokenService;
     }
 
-    @PostMapping(consumes = "application/json")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void authenticate(@RequestBody LoginRequest loginRequest, HttpServletResponse resp) {
+    @PostMapping(consumes = "application/json", produces = "application/json")
+    public LoginRequest authenticate(@RequestBody LoginRequest loginRequest, HttpServletResponse resp) {
         User authUser = userService.login(loginRequest);
         LoginRequest payload = new LoginRequest(authUser);
         String token = tokenService.generateToken(payload);
         System.out.println(token);
         resp.setHeader("Authorization", token);
         System.out.println(resp.getHeader("Authorization"));
+        payload.setToken(token);    //todo delete
+
+        return payload;
 
     }
 

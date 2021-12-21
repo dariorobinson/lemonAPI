@@ -6,6 +6,7 @@ import com.revature.lemon.common.exceptions.AuthorizationException;
 import com.revature.lemon.common.util.RoleType;
 import com.revature.lemon.common.util.web.Secured;
 import com.revature.lemon.user.User;
+import com.revature.lemon.user.dtos.LoginRequest;
 import com.revature.lemon.userplaylist.UserPlaylist;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -63,7 +64,7 @@ public class SecurityAspect {
      * todo leave all the print statements for testing later, still haven't tested if it works for editors and viewers
      * @param jp
      */
-    /*
+/*
     @Before("@annotation(com.revature.lemon.common.util.web.Secured)")
     public void requireCreator(JoinPoint jp) {
         if(!sessionExists()) {
@@ -85,6 +86,7 @@ public class SecurityAspect {
 
         //HttpSession session = getCurrentSessionIfExist().orElseThrow(() -> new AuthenticationException("No session found."));
 
+        LoginRequest user = tokenService.extractTokenDetails(token);
         User requester = ((User) session.getAttribute("authUser"));
         //String playlistId = annotation.playlistId();
 
@@ -112,7 +114,9 @@ public class SecurityAspect {
         logger.warn("User is not authorized to do this action");
         throw new AuthorizationException("You are not authorized to do this");
     }
-    */
+
+ */
+
 
     private <T extends Annotation> T getAnnotationFromJoinPoint(JoinPoint jp, Class<T> annotationType) {
         return ((MethodSignature) jp.getSignature()).getMethod().getAnnotation(annotationType);
