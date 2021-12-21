@@ -1,5 +1,6 @@
 package com.revature.lemon.playlist;
 
+import com.revature.lemon.common.model.SongPlaylistKey;
 import com.revature.lemon.common.util.AccessType;
 import com.revature.lemon.common.util.RoleType;
 import com.revature.lemon.playlist.dtos.requests.NewPlaylistRequest;
@@ -123,6 +124,12 @@ public class Playlist {
 
     public void removeUser(UserPlaylist user) {
         userRoleList.remove(user);
+    }
+
+    public void addSong(SongPlaylist songPlaylist) {
+        songPlaylist.setPlaylist(this);
+        songPlaylist.setId(new SongPlaylistKey(songPlaylist.getSong().getUrl(), getId()));
+        songOrderList.add(songPlaylist);
     }
 
     @Override

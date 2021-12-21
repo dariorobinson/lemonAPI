@@ -46,10 +46,10 @@ public class PlaylistController {
     @PatchMapping(value = "/{playlistId}/addsong", consumes = "application/json")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Secured(allowedAccountTypes = {RoleType.CREATOR, RoleType.EDITOR}) //Change to new annotation. Having to do with the user role.
-    public void editSongsInPlaylist(@PathVariable String playlistId, @RequestBody AddSongRequest newSongRequest, @RequestHeader("Authorization") String token) {
+    public void addSongInPlaylist(@PathVariable String playlistId, @RequestBody AddSongRequest newSongRequest, @RequestHeader("Authorization") String token) {
 
         newSongRequest.setPlaylistId(playlistId);
-        playlistService.editSongsInPlaylist(newSongRequest);
+        playlistService.addSongInPlaylist(newSongRequest);
     }
 
     //consider making a UserPlaylistRoleService or a UserPlaylistRoleRepository that PlaylistService gets injected with

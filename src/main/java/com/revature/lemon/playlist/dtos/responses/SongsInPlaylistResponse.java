@@ -15,7 +15,7 @@ public class SongsInPlaylistResponse {
 
     private String name;
 
-    private Duration duration;
+    private String duration;
 
     private int songOrder;
 
@@ -23,7 +23,8 @@ public class SongsInPlaylistResponse {
         Song song = playlist.getSong();
         this.url = song.getUrl();
         this.name = song.getName();
-        this.duration = song.getDuration();
+        this.duration = durationToString(song.getDuration());
+        System.out.println(this.duration);
         this.songOrder = playlist.getSongOrder();
     }
 
@@ -43,11 +44,11 @@ public class SongsInPlaylistResponse {
         this.name = name;
     }
 
-    public Duration getDuration() {
+    public String getDuration() {
         return duration;
     }
 
-    public void setDuration(Duration duration) {
+    public void setDuration(String duration) {
         this.duration = duration;
     }
 
@@ -57,6 +58,13 @@ public class SongsInPlaylistResponse {
 
     public void setSongOrder(int songOrder) {
         this.songOrder = songOrder;
+    }
+
+    public String durationToString(Duration duration) {
+        long seconds = duration.getSeconds();
+        String minutes = Long.toString(seconds/60);
+        String secondString = Long.toString(seconds%60);
+        return minutes + ":" + secondString;
     }
 
     @Override

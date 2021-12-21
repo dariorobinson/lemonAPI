@@ -12,6 +12,8 @@ import com.revature.lemon.playlist.dtos.requests.RemoveUserRequest;
 import com.revature.lemon.playlist.dtos.responses.PlaylistResponse;
 import com.revature.lemon.playlist.dtos.responses.SongsInPlaylistResponse;
 import com.revature.lemon.playlist.dtos.responses.UsersInPlaylistResponse;
+import com.revature.lemon.song.Song;
+import com.revature.lemon.song.SongRepository;
 import com.revature.lemon.user.User;
 import com.revature.lemon.user.UserRepository;
 import com.revature.lemon.userplaylist.UserPlaylist;
@@ -29,11 +31,13 @@ public class PlaylistService {
 
     private final PlaylistRepository playlistRepository;
     private final UserRepository userRepository;
+    private final SongRepository songRepository;
 
     @Autowired
-    public PlaylistService (PlaylistRepository playlistRepository, UserRepository userRepository) {
+    public PlaylistService (PlaylistRepository playlistRepository, UserRepository userRepository, SongRepository songRepository) {
         this.playlistRepository = playlistRepository;
         this.userRepository = userRepository;
+        this.songRepository = songRepository;
     }
 
     /**
@@ -52,24 +56,21 @@ public class PlaylistService {
      * Set that table to playlist then save
      * @param newSongRequest contains a playlistId and a list of songs
      */
-    public void editSongsInPlaylist(AddSongRequest newSongRequest) {
+    public void addSongInPlaylist(AddSongRequest newSongRequest) {
 
         //load up the playlist
         Playlist playlist = playlistRepository.findById(newSongRequest.getPlaylistId())
                                               .orElseThrow(PlaylistNotFoundException::new);
+        Song song = new Song();
+        song.setUrl(newSongRequest.getSongUrl());
+        song.setName(newSongRequest.getName());
+        song.setDuration(newSongRequest.getDuration());
+        //checks if song exists, if not save it to the database before playlist adds it
+        songRepository.findById(newSongRequest.getSongUrl()).orElse(songRepository.save(song));
+        SongPlaylist songPlaylist = new SongPlaylist();
+        songPlaylist.setSong(song);
+        playlist.addSong(songPlaylist);
 
-        List<String> songList = newSongRequest.getSongList();
-        List<SongPlaylist> newSongPlaylist = new ArrayList<>();
-        //For each song in the request, make a new composite key and assign its order from its position in the list
-        for(int i=0; i < songList.size(); i++) {
-            SongPlaylist songPlaylist = new SongPlaylist();
-            songPlaylist.setId(new SongPlaylistKey(songList.get(i),playlist.getId()));
-            songPlaylist.setSongOrder(i+1);
-            newSongPlaylist.add(songPlaylist);
-            System.out.println(songPlaylist.getSongOrder());
-        }
-
-        playlist.setSongOrderList(newSongPlaylist);
         playlistRepository.save(playlist);
     }
 
