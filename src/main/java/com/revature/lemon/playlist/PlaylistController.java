@@ -17,8 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.util.List;
 
 @RestController
@@ -58,8 +56,8 @@ public class PlaylistController {
     //put in a username and discriminator, UserPlaylistRole should be getting updated
     @ResponseStatus(HttpStatus.OK)
     @PatchMapping(value = "/{playlistId}/adduser", consumes = "application/json", produces = "application/json")
-   // @Secured(allowedAccountTypes = {RoleType.CREATOR}) // get user id from username + discriminator in service class
-    public PlaylistResponse addUserToPlaylist(@PathVariable String playlistId, @RequestBody AddUserRequest newUser) {
+    @Secured(allowedAccountTypes = {RoleType.CREATOR}) // get user id from username + discriminator in service class
+    public PlaylistResponse addUserToPlaylist(@PathVariable String playlistId, @RequestBody AddUserRequest newUser, @RequestHeader("Authorization") String token) {
 
         playlistService.addUserToPlaylist(playlistId, newUser);
         return null;
@@ -67,60 +65,58 @@ public class PlaylistController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping(value = "/{playlistId}/removeuser", consumes = "application/json")
-    //@Secured(allowedAccountTypes = {RoleType.CREATOR})
-    public void removeUserFromPlaylist(@PathVariable String playlistId, @RequestBody RemoveUserRequest userRequest) {
+    @Secured(allowedAccountTypes = {RoleType.CREATOR})
+    public void removeUserFromPlaylist(@PathVariable String playlistId, @RequestBody RemoveUserRequest userRequest, @RequestHeader("Authorization") String token) {
         playlistService.removeUserFromPlaylist(playlistId, userRequest);
 
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping(value = "/{playlistId}/edituser")
-    //@Secured(allowedAccountTypes = {RoleType.CREATOR})
-    public void editUserRole(@PathVariable String playlistId, @RequestBody AddUserRequest updateUser) {
+    @Secured(allowedAccountTypes = {RoleType.CREATOR})
+    public void editUserRole(@PathVariable String playlistId, @RequestBody AddUserRequest updateUser, @RequestHeader("Authorization") String token) {
 
         playlistService.editUserRoleInPlaylist(playlistId, updateUser);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping(value = "/{playlistId}")
-    //@Secured(allowedAccountTypes = {RoleType.CREATOR})
-    public void deletePlaylist(@PathVariable String playlistId) {
+    @Secured(allowedAccountTypes = {RoleType.CREATOR})
+    public void deletePlaylist(@PathVariable String playlistId, @RequestHeader("Authorization") String token) {
 
         playlistService.deletePlaylist(playlistId);
     }
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/{playlistId}/getusers")
-    //@Authenticated
-    public List<UsersInPlaylistResponse> getUsersWithRoles(@PathVariable String playlistId) {
+    @Authenticated
+    public List<UsersInPlaylistResponse> getUsersWithRoles(@PathVariable String playlistId, @RequestHeader("Authorization") String token) {
 
         return playlistService.getUsersWithPlaylistAccess(playlistId);
     }
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/{playlistId}/getsongs", produces = "application/json")
-    //@Authenticated
-    public List<SongsInPlaylistResponse> getSongsInPlaylist(@PathVariable String playlistId) {
+    @Authenticated
+    public List<SongsInPlaylistResponse> getSongsInPlaylist(@PathVariable String playlistId, @RequestHeader("Authorization") String token) {
 
         return playlistService.getSongsInPlaylist(playlistId);
     }
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/private", produces = "application/json")
-   // @Authenticated
-    public List<PlaylistResponse> getPrivatePlaylists(HttpSession session) {
+    @Authenticated
+    public List<PlaylistResponse> getPrivatePlaylists(@RequestHeader("Authorization") String token) {
 
-        User user = (User) session.getAttribute("authUser");
+        LoginRequest user = tokenService.extractTokenDetails(token);
+
         return playlistService.getPrivatePlaylists(user.getId());
     }
 
-    //@Authenticated
+    @Authenticated
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/public", produces = "application/json")
-    public List<PlaylistResponse> getPublicPlaylists() {
-//        User user = (User) session.getAttribute("authUser");
-//        System.out.println("Authuser is: " + session.getAttribute("authUser"));
-//        System.out.println(user);
+    public List<PlaylistResponse> getPublicPlaylists(@RequestHeader("Authorization") String token) {
 
         return playlistService.getPublicPlaylists();
     }

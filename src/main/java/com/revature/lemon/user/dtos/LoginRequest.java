@@ -9,7 +9,6 @@ public class LoginRequest {
     private String id;
     private String username;
     private String discriminator;
-    private String token;   //todo delete
 
     public LoginRequest(String id, String username, String discriminator){
         this.id=id;
@@ -21,15 +20,6 @@ public class LoginRequest {
         this.id = user.getId();
         this.username = user.getUsername();
         this.discriminator = user.getDiscriminator();
-    }
-
-    //todo delete
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
     }
 
     @Override

@@ -47,4 +47,9 @@ public class UserService {
             return newUser;
         }
     }
+
+    public User findUserById(String userId) {
+        return userRepository.findById(userId)
+                             .orElseThrow(ResourceNotFoundException::new);
+    }
 }

@@ -6,6 +6,7 @@ import com.revature.lemon.common.exceptions.AuthorizationException;
 import com.revature.lemon.common.util.RoleType;
 import com.revature.lemon.common.util.web.Secured;
 import com.revature.lemon.user.User;
+import com.revature.lemon.user.UserService;
 import com.revature.lemon.user.dtos.LoginRequest;
 import com.revature.lemon.userplaylist.UserPlaylist;
 import org.apache.logging.log4j.LogManager;
@@ -32,9 +33,11 @@ public class SecurityAspect {
 
     Logger logger = LogManager.getLogger();
     TokenService tokenService;
+    UserService userService;
 
-    public SecurityAspect(TokenService tokenService) {
+    public SecurityAspect(TokenService tokenService, UserService userService) {
         this.tokenService = tokenService;
+        this.userService = userService;
     }
 
     /**
@@ -64,7 +67,7 @@ public class SecurityAspect {
      * todo leave all the print statements for testing later, still haven't tested if it works for editors and viewers
      * @param jp
      */
-/*
+
     @Before("@annotation(com.revature.lemon.common.util.web.Secured)")
     public void requireCreator(JoinPoint jp) {
         if(!sessionExists()) {
@@ -86,12 +89,15 @@ public class SecurityAspect {
 
         //HttpSession session = getCurrentSessionIfExist().orElseThrow(() -> new AuthenticationException("No session found."));
 
-        LoginRequest user = tokenService.extractTokenDetails(token);
-        User requester = ((User) session.getAttribute("authUser"));
+        LoginRequest extractedUser = tokenService.extractTokenDetails(token);
+        User user123 = userService.findUserById(extractedUser.getId());
         //String playlistId = annotation.playlistId();
 
         //Iterate through the user's playlists and check to see if any of their playlists match the id of current playlist, then check if they are creator or not
-        List<UserPlaylist> list = requester.getPlaylistRole();
+        List<UserPlaylist> list = user123.getPlaylistRole();
+        System.out.println(user123);
+        System.out.println(user123.getPlaylistRole());
+        System.out.println("here");
         if(list != null) {
             for (int i = 0; i < list.size(); i++) {
                 System.out.println("Looking for playlists");
@@ -103,7 +109,7 @@ public class SecurityAspect {
                     System.out.println("Found playlist");
                     for (RoleType role : allowedRoles) {
                         System.out.println("Roles " + role);
-                        if (requester.getPlaylistRole().get(i).getUserRole().equals(role)) {
+                        if (user123.getPlaylistRole().get(i).getUserRole().equals(role)) {
                             logger.info("User has role: ${} and is authorized to do this action", role);
                             return;
                         }
@@ -115,7 +121,7 @@ public class SecurityAspect {
         throw new AuthorizationException("You are not authorized to do this");
     }
 
- */
+
 
 
     private <T extends Annotation> T getAnnotationFromJoinPoint(JoinPoint jp, Class<T> annotationType) {

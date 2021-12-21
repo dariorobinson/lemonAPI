@@ -31,8 +31,8 @@ public class AuthController {
         String token = tokenService.generateToken(payload);
         System.out.println(token);
         resp.setHeader("Authorization", token);
+        resp.setHeader("Access-Control-Expose-Headers", "Authorization");
         System.out.println(resp.getHeader("Authorization"));
-        payload.setToken(token);    //todo delete
 
         return payload;
 
