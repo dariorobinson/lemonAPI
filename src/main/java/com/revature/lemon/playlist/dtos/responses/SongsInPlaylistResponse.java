@@ -24,7 +24,6 @@ public class SongsInPlaylistResponse {
         this.url = song.getUrl();
         this.name = song.getName();
         this.duration = durationToString(song.getDuration());
-        System.out.println(this.duration);
         this.songOrder = playlist.getSongOrder();
     }
 
@@ -61,6 +60,9 @@ public class SongsInPlaylistResponse {
     }
 
     public String durationToString(Duration duration) {
+        if(duration == null) {
+            return null;
+        }
         long seconds = duration.getSeconds();
         String minutes = Long.toString(seconds/60);
         String secondString = Long.toString(seconds%60);

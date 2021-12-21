@@ -10,6 +10,7 @@ import com.revature.lemon.user.User;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
@@ -94,7 +95,11 @@ public class Playlist {
     }
 
     public void setSongOrderList(List<SongPlaylist> songOrderList) {
-        this.songOrderList.clear();
+        if(!songOrderList.isEmpty()) {
+            this.songOrderList.clear();
+        } else if (this.songOrderList == null) {
+            this.songOrderList = new LinkedList<SongPlaylist>();
+        }
         this.songOrderList.addAll(songOrderList);
     }
 
