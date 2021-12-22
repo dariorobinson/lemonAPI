@@ -64,9 +64,9 @@ public class PlaylistService {
         song.setName(newSongRequest.getName());
         song.setDuration(newSongRequest.getDuration());
         //checks if song exists, if not save it to the database before playlist adds it
-        //songRepository.findById(newSongRequest.getSongUrl()).orElse(songRepository.save(song));
-
-        System.out.println(songRepository.findById(newSongRequest.getSongUrl()));
+        if(!songRepository.findById(newSongRequest.getSongUrl()).isPresent()) {
+            songRepository.save(song);
+        }
 
         SongPlaylist songPlaylist = new SongPlaylist();
         songPlaylist.setSong(song);
