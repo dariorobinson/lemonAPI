@@ -4,6 +4,7 @@ package com.revature.lemon.user;
 import com.revature.lemon.auth.TokenService;
 import com.revature.lemon.user.dtos.LoginRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -24,6 +25,7 @@ public class AuthController {
 
     @CrossOrigin(exposedHeaders = "Authorization")
     @PostMapping(consumes = "application/json", produces = "application/json")
+    @ResponseStatus(HttpStatus.OK)
     public LoginRequest authenticate(@RequestBody LoginRequest loginRequest, HttpServletResponse resp) {
         User authUser = userService.login(loginRequest);
         LoginRequest payload = new LoginRequest(authUser);
