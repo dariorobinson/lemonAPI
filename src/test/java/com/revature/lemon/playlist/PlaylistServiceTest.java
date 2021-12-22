@@ -10,6 +10,8 @@ import com.revature.lemon.playlist.dtos.requests.AddUserRequest;
 import com.revature.lemon.playlist.dtos.requests.NewPlaylistRequest;
 import com.revature.lemon.playlist.dtos.requests.RemoveUserRequest;
 import com.revature.lemon.playlist.dtos.responses.PlaylistResponse;
+import com.revature.lemon.playlist.dtos.responses.SongsInPlaylistResponse;
+import com.revature.lemon.playlist.dtos.responses.UsersInPlaylistResponse;
 import com.revature.lemon.song.Song;
 import com.revature.lemon.song.SongRepository;
 import com.revature.lemon.user.User;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -95,35 +98,6 @@ public class PlaylistServiceTest {
         verify(mockPlaylistRepository, times(1)).findById(addSongRequest.getPlaylistId());
         verify(mockSongRepository, times(1)).findById(song.getUrl());
         verify(mockPlaylistRepository, times(1)).save(playlist);
-    }
-
-    @Test
-    public void test_addSongInPlaylist_getsSongFromRepository_givenSongUrlInDatabase() {
-
-        AddSongRequest addSongRequest = new AddSongRequest();
-        addSongRequest.setPlaylistId(UUID.randomUUID().toString());
-        Song song = new Song();
-        song.setUrl(addSongRequest.getSongUrl());
-        song.setDuration(addSongRequest.getDuration());
-        song.setName(addSongRequest.getName());
-
-        Playlist playlist = new Playlist();
-        List<SongPlaylist> songList = new LinkedList<>();
-        playlist.setSongOrderList(songList);
-        playlist.setId(addSongRequest.getPlaylistId());
-        SongPlaylist songPlaylist = new SongPlaylist();
-        songPlaylist.setSong(song);
-        playlist.addSong(songPlaylist);
-
-        when(mockPlaylistRepository.findById(addSongRequest.getPlaylistId())).thenReturn(java.util.Optional.of(playlist));
-        when(mockSongRepository.findById(song.getUrl())).thenReturn(java.util.Optional.of(song));
-
-        sut.addSongInPlaylist(addSongRequest);
-
-        verify(mockPlaylistRepository, times(1)).findById(addSongRequest.getPlaylistId());
-        verify(mockSongRepository, times(1)).findById(song.getUrl());
-        verify(mockPlaylistRepository, times(0)).save(playlist);
-
     }
 
     @Test
@@ -270,6 +244,50 @@ public class PlaylistServiceTest {
         ResourceNotFoundException thrown = assertThrows(ResourceNotFoundException.class, () -> sut.removeUserFromPlaylist(playlistId, removeUserRequest), "Expected for user to have no role in playlist but they did");
 
         Assertions.assertTrue(thrown.getMessage().contains("User did not have any roles in this playlist"));
+    }
+
+    @Test
+    public void test_getSongsInPlaylist_returnListOfSongsInPlaylistResponse_givenValidPlaylistId() {
+
+        String playlistId = "";
+        Playlist playlist = new Playlist();
+        playlist.setSongOrderList(new LinkedList<>());
+        List<SongsInPlaylistResponse> expectedResult = new LinkedList<>();
+
+        when(mockPlaylistRepository.findPlaylistByIdOrderBySongOrderListSongOrder(playlistId)).thenReturn(java.util.Optional.of(playlist));
+
+        List<SongsInPlaylistResponse> actualResult = sut.getSongsInPlaylist(playlistId);
+
+        verify(mockPlaylistRepository, times(1)).findPlaylistByIdOrderBySongOrderListSongOrder(playlistId);
+        Assertions.assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
+    public void test_getSongsInPlaylist_throwsPlaylistNotFoundException_givenInValidPlaylistId() {
+
+        String playlistId = "";
+        Playlist playlist = new Playlist();
+        playlist.setSongOrderList(new LinkedList<>());
+
+        when(mockPlaylistRepository.findPlaylistByIdOrderBySongOrderListSongOrder(playlistId)).thenThrow(PlaylistNotFoundException.class);
+
+        Assertions.assertThrows(PlaylistNotFoundException.class, () -> sut.getSongsInPlaylist(playlistId), "expected for playlist to not be found but found one instead");
+    }
+
+    @Test
+    public void test_getUsersWithPlaylistAccess_returnsListOfUsersWithAccess_givenValidPlaylistId() {
+
+        String playlistId = "";
+        Playlist playlist = new Playlist();
+        playlist.setUserRoleList(new LinkedList<>());
+        List<UsersInPlaylistResponse> expectedResult = new LinkedList<>();
+
+        when(mockPlaylistRepository.findById(playlistId)).thenReturn(java.util.Optional.of(playlist));
+
+        List<UsersInPlaylistResponse> actualResult = sut.getUsersWithPlaylistAccess(playlistId);
+
+        verify(mockPlaylistRepository, times(1)).findById(playlistId);
+        Assertions.assertEquals(expectedResult, actualResult);
     }
 
 

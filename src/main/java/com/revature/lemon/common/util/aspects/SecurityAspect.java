@@ -44,6 +44,7 @@ public class SecurityAspect {
     @Order(1)
     @Before("@annotation(com.revature.lemon.common.util.web.Authenticated)")
     public void requireAuthentication() {
+
         if(!sessionExists()) {
             throw new AuthenticationException("No session token found");
         }
@@ -52,24 +53,24 @@ public class SecurityAspect {
     /**
      * Helper method to get the current session
      */
-
     private boolean sessionExists() {
-        String token = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getHeader("Authorization");
 
+        String token = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getHeader("Authorization");
         return tokenService.isTokenValid(token);
     }
 
     /**
      * For methods with the @Secured annotation, check if the current user has the correct role to access method
-     * todo leave all the print statements for testing later, still haven't tested if it works for editors and viewers
      * @param jp
      */
-
     @Before("@annotation(com.revature.lemon.common.util.web.Secured)")
-    public void requireCreator(JoinPoint jp) {
+    public void requireRole(JoinPoint jp) {
+
         if(!sessionExists()) {
             throw new AuthenticationException("No current session found");
         }
+
+        //find playlistId from method parameters
         String playlistId = "";
         List<Parameter> parameters = Arrays.asList(((MethodSignature) jp.getSignature()).getMethod().getParameters());
         for(int i=0; i<parameters.size(); i++) {
@@ -77,31 +78,24 @@ public class SecurityAspect {
                 playlistId = jp.getArgs()[i].toString();
             }
         }
-        System.out.println(playlistId);
 
+        //determine what roles can access this current action
         Secured annotation = getAnnotationFromJoinPoint(jp, Secured.class);
         List<RoleType> allowedRoles = Arrays.asList(annotation.allowedAccountTypes());
 
+        //extract user information from token and find user that is currently doing the action
         String token = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getHeader("Authorization");
         LoginRequest extractedUser = tokenService.extractTokenDetails(token);
         User user123 = userService.findUserById(extractedUser.getId());
 
-        //Iterate through the user's playlists and check to see if any of their playlists match the id of current playlist, then check if they are creator or not
+        //Iterate through the user's playlists and check to see if any of their playlists match the id of current playlist, then check if they have proper role to do action
         List<UserPlaylist> list = user123.getPlaylistRole();
-        System.out.println(user123);
-        System.out.println(user123.getPlaylistRole());
-        System.out.println("here");
         if(list != null) {
             for (int i = 0; i < list.size(); i++) {
-                System.out.println("Looking for playlists");
                 UserPlaylist playlist = list.get(i);
-                System.out.println("playlist = " + playlist.getId().getPlaylistId());
-                System.out.println("finding: " + playlistId);
                 String playlistKeyId = playlist.getId().getPlaylistId();
                 if (playlistKeyId.equals(playlistId)) {
-                    System.out.println("Found playlist");
                     for (RoleType role : allowedRoles) {
-                        System.out.println("Roles " + role);
                         if (user123.getPlaylistRole().get(i).getUserRole().equals(role)) {
                             logger.info("User has role: ${} and is authorized to do this action", role);
                             return;

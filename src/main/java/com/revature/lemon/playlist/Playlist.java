@@ -137,6 +137,10 @@ public class Playlist {
         songOrderList.add(songPlaylist);
     }
 
+    public void removeSong(SongPlaylist songPlaylist) {
+        songOrderList.remove(songPlaylist);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
