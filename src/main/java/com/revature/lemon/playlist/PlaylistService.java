@@ -4,10 +4,7 @@ import com.revature.lemon.common.exceptions.PlaylistNotFoundException;
 import com.revature.lemon.common.exceptions.ResourceNotFoundException;
 import com.revature.lemon.common.model.SongPlaylist;
 import com.revature.lemon.common.util.AccessType;
-import com.revature.lemon.playlist.dtos.requests.AddSongRequest;
-import com.revature.lemon.playlist.dtos.requests.AddUserRequest;
-import com.revature.lemon.playlist.dtos.requests.NewPlaylistRequest;
-import com.revature.lemon.playlist.dtos.requests.RemoveUserRequest;
+import com.revature.lemon.playlist.dtos.requests.*;
 import com.revature.lemon.playlist.dtos.responses.PlaylistResponse;
 import com.revature.lemon.playlist.dtos.responses.SongsInPlaylistResponse;
 import com.revature.lemon.playlist.dtos.responses.UsersInPlaylistResponse;
@@ -49,6 +46,19 @@ public class PlaylistService {
         return new PlaylistResponse(playlist);
     }
 
+    public PlaylistResponse editPlaylist(EditPlaylistRequest editPlaylistRequest) {
+
+        Playlist playlist = playlistRepository.findById(editPlaylistRequest.getPlaylistId())
+                                              .orElseThrow(PlaylistNotFoundException::new);
+
+        playlist.setName(editPlaylistRequest.getName());
+        playlist.setDescription(editPlaylistRequest.getDescription());
+        playlist.setAccess(editPlaylistRequest.getAccess());
+
+        playlistRepository.save(playlist);
+        return new PlaylistResponse(playlist);
+    }
+
     /**
      * Grabs the list of songs from newSongRequest and maps it to an associate table between songs and playlist.
      * Set that table to playlist then save
@@ -70,6 +80,23 @@ public class PlaylistService {
         playlist.addSong(songPlaylist);
 
         playlistRepository.save(playlist);
+    }
+
+    public void removeSongFromPlaylist(RemoveSongRequest removeSongRequest) {
+
+        Playlist playlist = playlistRepository.findById(removeSongRequest.getPlaylistId())
+                                              .orElseThrow(PlaylistNotFoundException::new);
+
+        SongPlaylist songPlaylist = playlist.getSongOrderList()
+                                            .stream()
+                                            .filter(e -> e.getSong().getUrl().equals(removeSongRequest.getSongUrl()))
+                                            .findFirst()
+                                            .orElseThrow(() -> new ResourceNotFoundException("Song was not in the playlist"));
+
+        playlist.removeSong(songPlaylist);
+
+        playlistRepository.save(playlist);
+
     }
 
     /**

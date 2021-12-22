@@ -4,10 +4,7 @@ import com.revature.lemon.auth.TokenService;
 import com.revature.lemon.common.util.RoleType;
 import com.revature.lemon.common.util.web.Authenticated;
 import com.revature.lemon.common.util.web.Secured;
-import com.revature.lemon.playlist.dtos.requests.AddSongRequest;
-import com.revature.lemon.playlist.dtos.requests.AddUserRequest;
-import com.revature.lemon.playlist.dtos.requests.NewPlaylistRequest;
-import com.revature.lemon.playlist.dtos.requests.RemoveUserRequest;
+import com.revature.lemon.playlist.dtos.requests.*;
 import com.revature.lemon.playlist.dtos.responses.PlaylistResponse;
 import com.revature.lemon.playlist.dtos.responses.SongsInPlaylistResponse;
 import com.revature.lemon.playlist.dtos.responses.UsersInPlaylistResponse;
@@ -43,6 +40,15 @@ public class PlaylistController {
         return playlistService.createNewPlaylist(playlist);
     }
 
+    @Secured(allowedAccountTypes = {RoleType.CREATOR})
+    @ResponseStatus(HttpStatus.OK)
+    @PatchMapping(value = "/{playlistId}/editplaylist", consumes = "application/json")
+    public PlaylistResponse editPlaylist(@PathVariable String playlistId, @RequestBody EditPlaylistRequest playlist, @RequestHeader("Authorization") String token) {
+
+        playlist.setPlaylistId(playlistId);
+        return playlistService.editPlaylist(playlist);
+    }
+
     @PatchMapping(value = "/{playlistId}/addsong", consumes = "application/json")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Secured(allowedAccountTypes = {RoleType.CREATOR, RoleType.EDITOR}) //Change to new annotation. Having to do with the user role.
@@ -50,6 +56,15 @@ public class PlaylistController {
 
         newSongRequest.setPlaylistId(playlistId);
         playlistService.addSongInPlaylist(newSongRequest);
+    }
+
+    @PatchMapping(value = "/{playlistId}/removesong", consumes = "application/json")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Secured(allowedAccountTypes = {RoleType.CREATOR, RoleType.EDITOR})
+    public void deleteSongFromPlaylist(@PathVariable String playlistId, @RequestBody RemoveSongRequest removeSongRequest, @RequestHeader("Authorization") String token) {
+
+        removeSongRequest.setPlaylistId(playlistId);
+        playlistService.removeSongFromPlaylist(removeSongRequest);
     }
 
     //consider making a UserPlaylistRoleService or a UserPlaylistRoleRepository that PlaylistService gets injected with
