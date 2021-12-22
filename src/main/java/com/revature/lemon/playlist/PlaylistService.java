@@ -51,8 +51,12 @@ public class PlaylistService {
         Playlist playlist = playlistRepository.findById(editPlaylistRequest.getPlaylistId())
                                               .orElseThrow(PlaylistNotFoundException::new);
 
-        playlist.setName(editPlaylistRequest.getName());
-        playlist.setDescription(editPlaylistRequest.getDescription());
+        if(!editPlaylistRequest.getName().trim().equals("")) {
+            playlist.setName(editPlaylistRequest.getName().trim());
+        }
+        if(!editPlaylistRequest.getDescription().trim().equals("")) {
+            playlist.setDescription(editPlaylistRequest.getDescription().trim());
+        }
         playlist.setAccess(editPlaylistRequest.getAccess());
 
         playlistRepository.save(playlist);
