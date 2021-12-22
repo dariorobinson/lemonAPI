@@ -3,7 +3,6 @@ package com.revature.lemon.playlist;
 import com.revature.lemon.common.exceptions.PlaylistNotFoundException;
 import com.revature.lemon.common.exceptions.ResourceNotFoundException;
 import com.revature.lemon.common.model.SongPlaylist;
-import com.revature.lemon.common.model.SongPlaylistKey;
 import com.revature.lemon.common.util.AccessType;
 import com.revature.lemon.playlist.dtos.requests.AddSongRequest;
 import com.revature.lemon.playlist.dtos.requests.AddUserRequest;
@@ -21,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -118,7 +116,7 @@ public class PlaylistService {
         Playlist playlist = playlistRepository.findById(playlistId)
                                               .orElseThrow(PlaylistNotFoundException::new);
 
-        User user = userRepository.findUserByUsernameAndDiscriminator(newUser.getUsername(), newUser.getDiscriminator());
+        User user = userRepository.findUserByUsernameAndDiscriminator(newUser.getUsername(), newUser.getDiscriminator()).orElseThrow(ResourceNotFoundException::new);
 
         playlist.addUser(user, newUser.getUserRole());
         playlistRepository.save(playlist);

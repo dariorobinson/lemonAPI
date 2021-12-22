@@ -20,12 +20,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.HttpSession;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 @Aspect
 @Component
@@ -57,7 +55,6 @@ public class SecurityAspect {
 
     private boolean sessionExists() {
         String token = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getHeader("Authorization");
-        System.out.println(token);
 
         return tokenService.isTokenValid(token);
     }

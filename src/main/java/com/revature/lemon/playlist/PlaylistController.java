@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@CrossOrigin
+@CrossOrigin(origins = {"*"}, methods = {RequestMethod.PATCH, RequestMethod.OPTIONS, RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE}, allowedHeaders = {"X-Requested-With", "Origin", "Content-Type", "Accept", "Authorization"}, maxAge = 120)
 @RequestMapping("/playlists")
 public class PlaylistController {
 
@@ -54,13 +54,12 @@ public class PlaylistController {
 
     //consider making a UserPlaylistRoleService or a UserPlaylistRoleRepository that PlaylistService gets injected with
     //put in a username and discriminator, UserPlaylistRole should be getting updated
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping(value = "/{playlistId}/adduser", consumes = "application/json", produces = "application/json")
     @Secured(allowedAccountTypes = {RoleType.CREATOR}) // get user id from username + discriminator in service class
-    public PlaylistResponse addUserToPlaylist(@PathVariable String playlistId, @RequestBody AddUserRequest newUser, @RequestHeader("Authorization") String token) {
+    public void addUserToPlaylist(@PathVariable String playlistId, @RequestBody AddUserRequest newUser, @RequestHeader("Authorization") String token) {
 
         playlistService.addUserToPlaylist(playlistId, newUser);
-        return null;
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)

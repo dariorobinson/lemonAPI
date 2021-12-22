@@ -17,10 +17,7 @@ public class Song {
 
     @Column
     private Duration duration;
-/*
-    @OneToMany(mappedBy = "song")
-    List<SongPlaylistOrder> songOrder;
-*/
+
     public String getUrl() {
         return url;
     }
@@ -44,17 +41,6 @@ public class Song {
     public void setDuration(Duration duration) {
         this.duration = duration;
     }
-/*
-Probably won't need this, Song shouldn't need a reference to the playlist, Unidirectional
-
-    public List<SongPlaylistOrder> getSongOrder() {
-        return songOrder;
-    }
-
-    public void setSongOrder(List<SongPlaylistOrder> songOrder) {
-        this.songOrder = songOrder;
-    }
-    */
 
     @Override
     public boolean equals(Object o) {
