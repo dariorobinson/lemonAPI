@@ -66,6 +66,9 @@ public class SongsInPlaylistResponse {
         long seconds = duration.getSeconds();
         String minutes = Long.toString(seconds/60);
         String secondString = Long.toString(seconds%60);
+        if (Integer.parseInt(secondString) < 10) {
+            secondString = "0" + secondString;
+        }
         return minutes + ":" + secondString;
     }
 
