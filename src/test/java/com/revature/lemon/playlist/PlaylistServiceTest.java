@@ -5,10 +5,7 @@ import com.revature.lemon.common.exceptions.ResourceNotFoundException;
 import com.revature.lemon.common.model.SongPlaylist;
 import com.revature.lemon.common.util.AccessType;
 import com.revature.lemon.common.util.RoleType;
-import com.revature.lemon.playlist.dtos.requests.AddSongRequest;
-import com.revature.lemon.playlist.dtos.requests.AddUserRequest;
-import com.revature.lemon.playlist.dtos.requests.NewPlaylistRequest;
-import com.revature.lemon.playlist.dtos.requests.RemoveUserRequest;
+import com.revature.lemon.playlist.dtos.requests.*;
 import com.revature.lemon.playlist.dtos.responses.PlaylistResponse;
 import com.revature.lemon.playlist.dtos.responses.SongsInPlaylistResponse;
 import com.revature.lemon.playlist.dtos.responses.UsersInPlaylistResponse;
@@ -16,6 +13,7 @@ import com.revature.lemon.song.Song;
 import com.revature.lemon.song.SongRepository;
 import com.revature.lemon.user.User;
 import com.revature.lemon.user.UserRepository;
+import io.jsonwebtoken.lang.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -288,6 +286,59 @@ public class PlaylistServiceTest {
 
         verify(mockPlaylistRepository, times(1)).findById(playlistId);
         Assertions.assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
+    public void test_editPlaylist_returnsEditedPlaylist_givenEditPlaylistRequest() {
+
+        EditPlaylistRequest editPlaylistRequest = new EditPlaylistRequest();
+        editPlaylistRequest.setAccess(AccessType.PRIVATE);
+        editPlaylistRequest.setDescription("description");
+        editPlaylistRequest.setName("name");
+
+        Playlist playlist = new Playlist();
+        playlist.setName("name");
+        playlist.setDescription("description");
+        playlist.setAccess(AccessType.PRIVATE);
+
+        PlaylistResponse expectResult = new PlaylistResponse(playlist);
+
+        when(mockPlaylistRepository.findById(editPlaylistRequest.getPlaylistId())).thenReturn(java.util.Optional.of(playlist));
+        PlaylistResponse actualResult = sut.editPlaylist(editPlaylistRequest);
+
+        Assertions.assertEquals(expectResult, actualResult);
+    }
+
+    @Test
+    public void test_removeSongFromPlaylist_runsSuccessfully_givenSongUrlInPlaylist() {
+
+        RemoveSongRequest removeSongRequest = new RemoveSongRequest();
+        removeSongRequest.setPlaylistId("123");
+        removeSongRequest.setSongUrl("test.com");
+
+        Playlist expectedResult = new Playlist();
+        expectedResult.setId("123");
+        expectedResult.setSongOrderList(new LinkedList<>());
+
+        Playlist playlist = new Playlist();
+        playlist.setId("123");
+        playlist.setSongOrderList(new LinkedList<>());
+
+        Song song = new Song();
+        song.setUrl("test.com");
+
+        SongPlaylist songPlaylist = new SongPlaylist();
+        songPlaylist.setSong(song);
+        songPlaylist.setPlaylist(playlist);
+        playlist.addSong(songPlaylist);
+
+        when(mockPlaylistRepository.findById(removeSongRequest.getPlaylistId())).thenReturn(java.util.Optional.of(playlist));
+
+        sut.removeSongFromPlaylist(removeSongRequest);
+
+        verify(mockPlaylistRepository, times(1)).findById(removeSongRequest.getPlaylistId());
+        Assertions.assertEquals(expectedResult, playlist);
+
     }
 
 

@@ -4,7 +4,7 @@ import com.revature.lemon.common.model.SongPlaylistKey;
 import com.revature.lemon.common.util.AccessType;
 import com.revature.lemon.common.util.RoleType;
 import com.revature.lemon.playlist.dtos.requests.NewPlaylistRequest;
-import com.revature.lemon.userplaylist.UserPlaylist;
+import com.revature.lemon.common.model.UserPlaylist;
 import com.revature.lemon.common.model.SongPlaylist;
 import com.revature.lemon.user.User;
 

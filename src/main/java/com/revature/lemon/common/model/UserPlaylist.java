@@ -1,4 +1,4 @@
-package com.revature.lemon.userplaylist;
+package com.revature.lemon.common.model;
 
 import com.revature.lemon.common.util.RoleType;
 import com.revature.lemon.playlist.Playlist;

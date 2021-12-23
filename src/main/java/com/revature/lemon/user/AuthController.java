@@ -30,9 +30,7 @@ public class AuthController {
         User authUser = userService.login(loginRequest);
         LoginRequest payload = new LoginRequest(authUser);
         String token = tokenService.generateToken(payload);
-        System.out.println(token);
         resp.setHeader("Authorization", token);
-        System.out.println(resp.getHeader("Authorization"));
 
         return payload;
 

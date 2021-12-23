@@ -2,7 +2,7 @@ package com.revature.lemon.playlist.dtos.responses;
 
 import com.revature.lemon.common.util.RoleType;
 import com.revature.lemon.user.User;
-import com.revature.lemon.userplaylist.UserPlaylist;
+import com.revature.lemon.common.model.UserPlaylist;
 
 import java.util.Objects;
 
