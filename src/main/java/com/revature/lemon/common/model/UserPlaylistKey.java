@@ -1,4 +1,4 @@
-package com.revature.lemon.userplaylist;
+package com.revature.lemon.common.model;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;

@@ -1,6 +1,6 @@
 package com.revature.lemon.user;
 
-import com.revature.lemon.userplaylist.UserPlaylist;
+import com.revature.lemon.common.model.UserPlaylist;
 
 import javax.persistence.*;
 import java.util.List;

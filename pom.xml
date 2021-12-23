@@ -98,6 +98,22 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
+                        <configuration>
+                            <excludes>
+                                <exclude>com/revature/lemon/common/dtos/*</exclude>
+                                <exclude>com/revature/lemon/common/exceptions/*</exclude>
+                                <exclude>com/revature/lemon/common/model/*</exclude>
+                                <exclude>com/revature/lemon/common/util/*</exclude>
+                                <exclude>com/revature/lemon/common/util/aspects/*</exclude>
+                                <exclude>com/revature/lemon/auth/*</exclude>
+                                <exclude>com/revature/lemon/playlist/dtos/requests/*</exclude>
+                                <exclude>com/revature/lemon/playlist/dtos/responses/*</exclude>
+                                <exclude>com/revature/lemon/song/dtos/</exclude>
+                                <exclude>com/revature/lemon/song/Song.class</exclude>
+                                <exclude>com/revature/lemon/user/dtos/</exclude>
+                                <exclude>com/revature/lemon/user/User.class</exclude>
+                            </excludes>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

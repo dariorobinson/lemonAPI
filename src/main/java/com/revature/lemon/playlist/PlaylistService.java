@@ -12,7 +12,7 @@ import com.revature.lemon.song.Song;
 import com.revature.lemon.song.SongRepository;
 import com.revature.lemon.user.User;
 import com.revature.lemon.user.UserRepository;
-import com.revature.lemon.userplaylist.UserPlaylist;
+import com.revature.lemon.common.model.UserPlaylist;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

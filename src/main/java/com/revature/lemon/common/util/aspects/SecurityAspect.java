@@ -8,7 +8,7 @@ import com.revature.lemon.common.util.web.Secured;
 import com.revature.lemon.user.User;
 import com.revature.lemon.user.UserService;
 import com.revature.lemon.user.dtos.LoginRequest;
-import com.revature.lemon.userplaylist.UserPlaylist;
+import com.revature.lemon.common.model.UserPlaylist;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.aspectj.lang.JoinPoint;
